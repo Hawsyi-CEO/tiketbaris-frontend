@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Midtrans Payment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Midtrans Payment Integration</h1>
+        
+        <div class="test-info">
+            <h3>📋 Test Cards:</h3>
+            <ul>
+                <li><strong>Success:</strong> 4811111111111114</li>
+                <li><strong>3D Secure:</strong> 4911111111111113</li>
+                <li><strong>Failed:</strong> 4411111111111118</li>
+                <li><strong>CVV:</strong> 123</li>
+                <li><strong>Expiry:</strong> 12/25</li>
+            </ul>
+        </div>
+
+        <div>
+            <button onclick="testSnapLoading()">1. Test Snap Loading</button>
+            <button onclick="testDummyPayment()">2. Test Payment Popup</button>
+            <button onclick="testRealPayment()">3. Test Real Payment</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div id="log" class="log">Testing log akan muncul di sini...\n</div>
+    </div>
+
+    <!-- Load Midtrans Snap -->
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-elnf14D8Ip6f1Yba"></script>
+    
+    <script>
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        function testSnapLoading() {
+            log('🧪 Testing Snap loading...');
+            
+            if (typeof window.snap !== 'undefined') {
+                log('✅ window.snap is available');
+                log('✅ snap.pay function: ' + typeof window.snap.pay);
+            } else {
+                log('❌ window.snap is NOT available');
+                log('❌ Script mungkin belum load atau ada error');
+            }
+            
+            // Check script element
+            const snapScript = document.querySelector('script[src*="snap.js"]');
+            if (snapScript) {
+                log('✅ Snap script element found');
+                log('✅ Client key: ' + snapScript.getAttribute('data-client-key'));
+            } else {
+                log('❌ Snap script element NOT found');
+            }
+        }
+
+        function testDummyPayment() {
+            log('🧪 Testing dummy payment popup...');
+            
+            if (!window.snap) {
+                log('❌ Snap not loaded. Run test 1 first.');
+                return;
+            }
+
+            try {
+                // Use dummy token to test popup opening
+                window.snap.pay('dummy-token-test', {
+                    onSuccess: function(result) {
+                        log('✅ Success callback triggered');
+                        log('Result: ' + JSON.stringify(result));
+                    },
+                    onPending: function(result) {
+                        log('⏳ Pending callback triggered');
+                        log('Result: ' + JSON.stringify(result));
+                    },
+                    onError: function(result) {
+                        log('❌ Error callback triggered (expected for dummy token)');
+                        log('Error: ' + JSON.stringify(result));
+                    },
+                    onClose: function() {
+                        log('🚪 Close callback triggered');
+                    }
+                });
+                log('✅ snap.pay() called successfully');
+            } catch(error) {
+                log('❌ Error calling snap.pay(): ' + error.message);
+            }
+        }
+
+        async function testRealPayment() {
+            log('🧪 Testing real payment with backend...');
+            
+            if (!window.snap) {
+                log('❌ Snap not loaded. Run test 1 first.');
+                return;
+            }
+
+            try {
+                // Get token from server (you need to login first)
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    log('❌ No auth token. Please login first at http://localhost:3001/login');
+                    return;
+                }
+
+                log('📡 Requesting snap token from backend...');
+                const response = await fetch('http://localhost:5000/api/midtrans/create-snap-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        eventId: 4, // Use existing event ID
+                        quantity: 1
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get snap token: ' + response.statusText);
+                }
+
+                const data = await response.json();
+                log('✅ Got snap token: ' + data.snap_token.substring(0, 20) + '...');
+                
+                // Show test card reminder
+                log('💳 USE TEST CARD: 4811111111111114, CVV: 123, EXP: 12/25');
+
+                // Open payment popup
+                window.snap.pay(data.snap_token, {
+                    onSuccess: function(result) {
+                        log('🎉 Payment SUCCESS!');
+                        log('Result: ' + JSON.stringify(result, null, 2));
+                    },
+                    onPending: function(result) {
+                        log('⏳ Payment PENDING');
+                        log('Result: ' + JSON.stringify(result, null, 2));
+                    },
+                    onError: function(result) {
+                        log('❌ Payment ERROR');
+                        log('Error: ' + JSON.stringify(result, null, 2));
+                    },
+                    onClose: function() {
+                        log('🚪 Payment popup CLOSED');
+                    }
+                });
+
+            } catch(error) {
+                log('❌ Error: ' + error.message);
+            }
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                log('🚀 Page loaded. Ready for testing!');
+                log('');
+                testSnapLoading();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config/api';
+
+const DevicesSidebar = ({ isOpen, onClose }) => {
+  const [devices, setDevices] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDevices();
+    }
+  }, [isOpen]);
+
+  const fetchDevices = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch${API_URL}"/sessions/my-devices', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setDevices(data.devices);
+      }
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogoutDevice = async (sessionId) => {
+    if (!confirm('Apakah Anda yakin ingin logout dari device ini?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/sessions/device/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        fetchDevices(); // Refresh list
+      }
+    } catch (error) {
+      console.error('Error logging out device:', error);
+    }
+  };
+
+  const handleLogoutAllOthers = async () => {
+    if (!confirm('Apakah Anda yakin ingin logout dari semua device lain?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const sessionToken = localStorage.getItem('sessionToken');
+      
+      const response = await fetch${API_URL}"/sessions/logout-all-others', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sessionToken })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`${data.count} device berhasil di-logout`);
+        fetchDevices(); // Refresh list
+      }
+    } catch (error) {
+      console.error('Error logging out all devices:', error);
+    }
+  };
+
+  const getDeviceIcon = (deviceType) => {
+    switch (deviceType) {
+      case 'mobile': return '📱';
+      case 'tablet': return '📱';
+      case 'desktop': return '💻';
+      default: return '🖥️';
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'active':
+        return <span className="status-badge active">● Aktif</span>;
+      case 'recent':
+        return <span className="status-badge recent">● Baru saja</span>;
+      default:
+        return <span className="status-badge inactive">● Tidak aktif</span>;
+    }
+  };
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Baru saja';
+    if (diffMins < 60) return `${diffMins} menit yang lalu`;
+    if (diffHours < 24) return `${diffHours} jam yang lalu`;
+    if (diffDays < 7) return `${diffDays} hari yang lalu`;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      <div 
+        className="sidebar-overlay"
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 999,
+          animation: 'fadeIn 0.3s ease'
+        }}
+      />
+
+      {/* Sidebar */}
+      <div
+        className="devices-sidebar"
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: '400px',
+          height: '100vh',
+          backgroundColor: '#fff',
+          boxShadow: '-2px 0 10px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          animation: 'slideInRight 0.3s ease'
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
+              🔐 Device Login
+            </h2>
+            <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+              Kelola akses device Anda
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#6b7280',
+              padding: '5px'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '20px'
+        }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+              <div className="spinner" />
+              <p style={{ marginTop: '10px' }}>Loading devices...</p>
+            </div>
+          ) : devices.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+              <span style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}>📱</span>
+              <p>Tidak ada device terdaftar</p>
+            </div>
+          ) : (
+            <>
+              {devices.map((device, index) => (
+                <div
+                  key={device.id}
+                  style={{
+                    padding: '15px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                    backgroundColor: device.is_current ? '#f0fdf4' : '#fff',
+                    borderLeft: device.is_current ? '4px solid #10b981' : '4px solid #e5e7eb'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>{getDeviceIcon(device.device_type)}</span>
+                      <div>
+                        <h3 style={{
+                          margin: 0,
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#1f2937'
+                        }}>
+                          {device.device_name}
+                          {device.is_current && (
+                            <span style={{
+                              marginLeft: '8px',
+                              fontSize: '11px',
+                              padding: '2px 8px',
+                              backgroundColor: '#10b981',
+                              color: '#fff',
+                              borderRadius: '4px',
+                              fontWeight: '600'
+                            }}>
+                              CURRENT
+                            </span>
+                          )}
+                        </h3>
+                        <p style={{
+                          margin: '3px 0 0 0',
+                          fontSize: '12px',
+                          color: '#6b7280'
+                        }}>
+                          {device.ip_address}
+                        </p>
+                      </div>
+                    </div>
+                    {getStatusBadge(device.status)}
+                  </div>
+
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      ⏰ Terakhir aktif: <strong>{formatDate(device.last_active)}</strong>
+                    </div>
+                    <div>
+                      📅 Login: <strong>{formatDate(device.created_at)}</strong>
+                    </div>
+                  </div>
+
+                  {!device.is_current && (
+                    <button
+                      onClick={() => handleLogoutDevice(device.id)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        backgroundColor: '#fee2e2',
+                        color: '#dc2626',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => e.target.style.backgroundColor = '#fecaca'}
+                      onMouseOut={(e) => e.target.style.backgroundColor = '#fee2e2'}
+                    >
+                      🚪 Logout Device Ini
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {devices.length > 1 && (
+                <button
+                  onClick={handleLogoutAllOthers}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#ef4444',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    marginTop: '10px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#dc2626'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#ef4444'}
+                >
+                  🚪 Logout Semua Device Lain
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: '15px 20px',
+          borderTop: '1px solid #e5e7eb',
+          backgroundColor: '#f9fafb',
+          fontSize: '12px',
+          color: '#6b7280'
+        }}>
+          <div style={{ marginBottom: '8px' }}>
+            💡 <strong>Tips Keamanan:</strong>
+          </div>
+          <ul style={{ margin: 0, paddingLeft: '20px' }}>
+            <li>Logout device yang tidak dikenali</li>
+            <li>Periksa secara berkala</li>
+            <li>Gunakan password yang kuat</li>
+          </ul>
+        </div>
+      </div>
+
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+          }
+
+          .status-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+          }
+
+          .status-badge.active {
+            background-color: #d1fae5;
+            color: #065f46;
+          }
+
+          .status-badge.recent {
+            background-color: #fef3c7;
+            color: #92400e;
+          }
+
+          .status-badge.inactive {
+            background-color: #f3f4f6;
+            color: #6b7280;
+          }
+
+          .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          @media (max-width: 768px) {
+            .devices-sidebar {
+              width: 100% !important;
+            }
+          }
+        `}
+      </style>
+    </>
+  );
+};
+
+export default DevicesSidebar;
+
+
+
