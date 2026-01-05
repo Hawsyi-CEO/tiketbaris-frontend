@@ -102,155 +102,131 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-        {/* Left Side - Brand Info (hidden on mobile) */}
-        <div className="login-brand-section" style={{ 
-          flex: 1, 
-          background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
-          color: 'white',
-          padding: '60px 40px',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '42px', fontWeight: '800', margin: '0 0 15px 0' }}>🎫 tiketbaris.id</h1>
-            <p style={{ fontSize: '18px', margin: '0 0 10px 0', opacity: 0.9 }}>Platform Tiket Terpercaya</p>
-            <p style={{ fontSize: '14px', margin: '0 0 40px 0', opacity: 0.8, maxWidth: '300px', lineHeight: '1.6' }}>
-              Beli tiket event favorit Anda dengan mudah dan aman. Ribuan event menanti Anda!
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '16px' }}>
-                <span style={{ fontSize: '24px' }}>✅</span>
-                <p style={{ margin: 0 }}>Transaksi Aman</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '16px' }}>
-                <span style={{ fontSize: '24px' }}>🚀</span>
-                <p style={{ margin: 0 }}>Pembelian Cepat</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '16px' }}>
-                <span style={{ fontSize: '24px' }}>🎯</span>
-                <p style={{ margin: 0 }}>Event Lengkap</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+      {/* Brand Section - Responsive */}
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-600 to-red-900 text-white p-12 lg:p-16 items-center justify-center">
+        <div className="text-center space-y-8">
+          <div>
+            <h1 className="text-5xl lg:text-6xl font-black mb-4">tiketbaris.id</h1>
+            <p className="text-xl font-semibold opacity-95">Platform Tiket Terpercaya</p>
           </div>
-        </div>
 
-        {/* Right Side - Login Form */}
-        <div style={{ 
-          display: 'flex', 
-          flex: 1, 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          padding: 'clamp(20px, 5vw, 40px)'
-        }}>
-          <div className="card" style={{ maxWidth: '450px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-              <div>
-                <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: '700', color: '#1f2937', margin: '0 0 10px 0' }}>🔐 Masuk Ke Akun</h2>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Akses akun Anda untuk membeli tiket</p>
-              </div>
-              <button 
-                onClick={() => navigate('/')} 
-                type="button"
-                style={{ 
-                  padding: '8px 16px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#4b5563',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#e5e7eb'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-              >
-                🏠 Beranda
-              </button>
+          <p className="text-base opacity-90 max-w-sm mx-auto leading-relaxed">
+            Beli tiket event favorit Anda dengan mudah dan aman. Ribuan event menanti Anda!
+          </p>
+
+          <div className="space-y-4 pt-8">
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">✓</div>
+              <p className="text-lg">Transaksi Aman</p>
             </div>
-            <div style={{ marginBottom: '20px' }}></div>
-
-            {error && (
-              <div style={{ 
-                backgroundColor: '#fee2e2', 
-                color: '#991b1b',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                fontSize: '14px',
-                border: '1px solid #fecaca'
-              }}>
-                <span>❌ </span>
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="form-group">
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}>📧 Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="masukkan@email.com"
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}>🔒 Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                {loading ? '⏳ Loading...' : '🚀 Login Sekarang'}
-              </button>
-            </form>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '25px 0', color: '#6b7280', fontSize: '13px' }}>
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
-              <span>atau login dengan</span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">⚡</div>
+              <p className="text-lg">Pembelian Cepat</p>
             </div>
-
-            <div style={{ marginBottom: '25px' }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                text="signin_with"
-                width="100%"
-              />
-            </div>
-
-            <div style={{ textAlign: 'center', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 10px 0' }}>Belum punya akun?</p>
-              <button 
-                onClick={() => navigate('/register')}
-                style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
-              >
-                📝 Daftar Sekarang
-              </button>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '15px' }}>
-              <a href="#" style={{ fontSize: '13px', color: '#dc2626', textDecoration: 'none' }}>Lupa password?</a>
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">📅</div>
+              <p className="text-lg">Event Lengkap</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Login Form Section */}
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-4 py-8 md:py-0">
+        <div className="w-full max-w-md">
+          {/* Header with Home Button */}
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Login</h2>
+              <p className="text-gray-600">Akses akun Anda untuk membeli tiket</p>
+            </div>
+            <button 
+              onClick={() => navigate('/')} 
+              type="button"
+              className="ml-3 px-3 py-2 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+            >
+              ← Beranda
+            </button>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm border border-red-200">
+              {error}
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6 mb-8">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@email.com"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              {loading ? 'Sedang Memproses...' : 'Login'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <span className="text-sm text-gray-500">atau</span>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          {/* Google Login */}
+          <div className="mb-6">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              text="signin_with"
+              width="100%"
+            />
+          </div>
+
+          {/* Sign Up & Forgot Password */}
+          <div className="space-y-4 text-center border-t border-gray-200 pt-6">
+            <div>
+              <p className="text-gray-600 text-sm mb-2">Belum punya akun?</p>
+              <button 
+                onClick={() => navigate('/register')}
+                className="text-red-600 hover:text-red-700 font-semibold text-sm transition-colors"
+              >
+                Daftar Sekarang
+              </button>
+            </div>
+            <a href="#" className="block text-red-600 hover:text-red-700 text-xs transition-colors">
+              Lupa password?
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
 
       {/* Notification Modal */}
       <NotificationModal
