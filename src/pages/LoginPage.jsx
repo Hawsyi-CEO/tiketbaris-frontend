@@ -102,49 +102,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row w-full overflow-hidden">
       {/* Brand Section - Responsive */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-600 to-red-900 text-white p-12 lg:p-16 items-center justify-center">
-        <div className="text-center space-y-8">
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-600 to-red-900 text-white p-8 md:p-12 lg:p-16 items-center justify-center">
+        <div className="text-center space-y-6 md:space-y-8">
           <div>
-            <h1 className="text-5xl lg:text-6xl font-black mb-4">tiketbaris.id</h1>
-            <p className="text-xl font-semibold opacity-95">Platform Tiket Terpercaya</p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-2 md:mb-4">tiketbaris.id</h1>
+            <p className="text-lg md:text-xl font-semibold opacity-95">Platform Tiket Terpercaya</p>
           </div>
 
-          <p className="text-base opacity-90 max-w-sm mx-auto leading-relaxed">
+          <p className="text-sm md:text-base opacity-90 max-w-sm mx-auto leading-relaxed">
             Beli tiket event favorit Anda dengan mudah dan aman. Ribuan event menanti Anda!
           </p>
 
-          <div className="space-y-4 pt-8">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl">✓</div>
-              <p className="text-lg">Transaksi Aman</p>
+          <div className="space-y-3 md:space-y-4 pt-6 md:pt-8">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-2xl md:text-3xl">✓</div>
+              <p className="text-base md:text-lg">Transaksi Aman</p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-3xl">⚡</div>
-              <p className="text-lg">Pembelian Cepat</p>
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-2xl md:text-3xl">⚡</div>
+              <p className="text-base md:text-lg">Pembelian Cepat</p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-3xl">📅</div>
-              <p className="text-lg">Event Lengkap</p>
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-2xl md:text-3xl">📅</div>
+              <p className="text-base md:text-lg">Event Lengkap</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Login Form Section */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-4 py-8 md:py-0">
-        <div className="w-full max-w-md">
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-0 min-h-screen md:min-h-auto">
+        <div className="w-full max-w-sm sm:max-w-md">
           {/* Header with Home Button */}
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Login</h2>
-              <p className="text-gray-600">Akses akun Anda untuk membeli tiket</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">Login</h2>
+              <p className="text-sm sm:text-base text-gray-600">Akses akun Anda untuk membeli tiket</p>
             </div>
             <button 
               onClick={() => navigate('/')} 
               type="button"
-              className="ml-3 px-3 py-2 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+              className="px-3 py-2 sm:px-4 sm:py-2 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
             >
               ← Beranda
             </button>
@@ -152,13 +152,13 @@ export default function LoginPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm border border-red-200">
+            <div className="bg-red-50 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-4 sm:mb-6 text-sm border border-red-200">
               {error}
             </div>
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6 mb-8">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
               <input
@@ -166,7 +166,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm sm:text-base"
                 required
               />
             </div>
@@ -178,14 +178,14 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm sm:text-base"
                 required
               />
             </div>
 
             <button 
               type="submit" 
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 sm:py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               disabled={loading}
             >
               {loading ? 'Sedang Memproses...' : 'Login'}
@@ -193,14 +193,14 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
             <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-sm text-gray-500">atau</span>
+            <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">atau</span>
             <div className="flex-1 h-px bg-gray-200"></div>
           </div>
 
           {/* Google Login */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
@@ -210,9 +210,9 @@ export default function LoginPage() {
           </div>
 
           {/* Sign Up & Forgot Password */}
-          <div className="space-y-4 text-center border-t border-gray-200 pt-6">
+          <div className="space-y-3 sm:space-y-4 text-center border-t border-gray-200 pt-4 sm:pt-6">
             <div>
-              <p className="text-gray-600 text-sm mb-2">Belum punya akun?</p>
+              <p className="text-gray-600 text-xs sm:text-sm mb-2">Belum punya akun?</p>
               <button 
                 onClick={() => navigate('/register')}
                 className="text-red-600 hover:text-red-700 font-semibold text-sm transition-colors"
@@ -220,7 +220,7 @@ export default function LoginPage() {
                 Daftar Sekarang
               </button>
             </div>
-            <a href="#" className="block text-red-600 hover:text-red-700 text-xs transition-colors">
+            <a href="#" className="block text-red-600 hover:text-red-700 text-xs sm:text-xs transition-colors">
               Lupa password?
             </a>
           </div>
