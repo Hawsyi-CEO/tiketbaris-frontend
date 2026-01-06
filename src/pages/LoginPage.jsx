@@ -102,9 +102,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row w-full overflow-hidden">
+    <div className="min-h-screen bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-0">
       {/* Brand Section - Responsive */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-red-600 to-red-900 text-white p-8 md:p-12 lg:p-16 items-center justify-center">
+      <div className="hidden md:flex bg-gradient-to-br from-red-600 to-red-900 text-white p-12 lg:p-16 items-center justify-center">
         <div className="text-center space-y-6 md:space-y-8">
           <div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-2 md:mb-4">tiketbaris.id</h1>
@@ -133,8 +133,8 @@ export default function LoginPage() {
       </div>
 
       {/* Login Form Section */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-0 min-h-screen md:min-h-auto">
-        <div className="w-full max-w-sm sm:max-w-md">
+      <div className="flex flex-col items-center justify-center px-4 py-12 md:py-0">
+        <div className="w-full max-w-sm">
           {/* Header with Home Button */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="flex-1">
