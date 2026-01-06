@@ -200,12 +200,11 @@ export default function LoginPage() {
           </div>
 
           {/* Google Login */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-4 sm:mb-6 flex justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
               text="signin_with"
-              width="100%"
             />
           </div>
 
