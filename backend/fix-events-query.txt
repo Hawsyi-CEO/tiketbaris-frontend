@@ -1,0 +1,7 @@
+// OLD QUERY (WRONG):
+// 'INSERT INTO events (user_id, title, description, date, location, price, current_stock, original_stock, sold_tickets, image_url, documents, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+// [userId, title, description, date, location, price, stock, stock, 0, imageUrl, documentsUrl, 'active']
+
+// NEW QUERY (CORRECT):
+'INSERT INTO events (user_id, title, description, date, location, price, stock, current_stock, image_url, documents, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+[userId, title, description, date, location, price, stock, stock, imageUrl, documentsUrl, 'active']

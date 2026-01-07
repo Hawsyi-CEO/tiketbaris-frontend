@@ -1,0 +1,233 @@
+/* Checkout Page Responsive Styles */
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sticky sidebar optimization */
+@media (min-width: 1024px) {
+  .checkout-sticky-sidebar {
+    position: sticky;
+    top: 6rem; /* 24 * 0.25rem = 6rem */
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .checkout-sticky-sidebar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .checkout-sticky-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .checkout-sticky-sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .checkout-sticky-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Mobile optimization - remove sticky on mobile */
+@media (max-width: 1023px) {
+  .checkout-sticky-sidebar {
+    position: relative;
+    top: 0;
+  }
+}
+
+/* Event image loading animation */
+.checkout-event-image {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.checkout-event-image img {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.checkout-event-image:hover img {
+  transform: scale(1.05);
+}
+
+/* Smooth card animations */
+.checkout-card-enter {
+  animation: slideInUp 0.4s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive grid improvements */
+.checkout-info-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .checkout-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Payment method hover effect */
+.checkout-payment-method {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.checkout-payment-method:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-payment-method:active {
+  transform: translateY(0);
+}
+
+/* Loading state for images */
+.checkout-image-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Improve button spacing on mobile */
+@media (max-width: 640px) {
+  .checkout-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .checkout-button-group button {
+    width: 100%;
+  }
+}
+
+/* Summary card highlight */
+.checkout-summary-card {
+  position: relative;
+}
+
+.checkout-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+}
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+  .checkout-title {
+    font-size: 1.5rem;
+  }
+
+  .checkout-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .checkout-price {
+    font-size: 1.25rem;
+  }
+}
+
+/* Better spacing for form elements */
+.checkout-form-section {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .checkout-form-section {
+    margin-bottom: 2rem;
+  }
+}
+
+/* Improve readability for description */
+.checkout-description {
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.checkout-description p {
+  margin-bottom: 0.75rem;
+}
+
+/* Terms and conditions list styling */
+.checkout-terms-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.checkout-terms-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkout-terms-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: bold;
+}
+
+/* Mobile navigation padding adjustment */
+@media (max-width: 640px) {
+  .checkout-mobile-nav {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .checkout-sticky-sidebar {
+    position: relative !important;
+  }
+
+  button {
+    display: none;
+  }
+}

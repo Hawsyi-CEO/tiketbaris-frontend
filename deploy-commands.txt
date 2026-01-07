@@ -1,0 +1,76 @@
+# ==========================================
+# DEPLOY COMMANDS - Copy paste ke terminal VPS
+# ==========================================
+
+# STEP 1: BACKUP VPS (PENTING!)
+# ==========================================
+cd /var/www
+tar -czf tiketbaris-backup-$(date +%Y%m%d-%H%M%S).tar.gz tiketbaris/
+ls -lh tiketbaris-backup* | tail -1
+echo "✅ Backup created successfully"
+
+# STEP 2: VERIFY BACKUP SIZE
+# ==========================================
+du -sh tiketbaris/
+echo "Backup should be similar size to above"
+
+# ==========================================
+# SETELAH BACKUP SELESAI, LANJUT KE UPLOAD
+# ==========================================
+
+# Dari Windows PowerShell (c:\laragon\www\simtix):
+
+# STEP 3A: Upload Frontend (dari PowerShell Windows)
+scp -r frontend/dist/* root@72.61.140.193:/var/www/tiketbaris/frontend/
+
+# STEP 3B: Upload Backend (dari PowerShell Windows)
+scp -r backend/* root@72.61.140.193:/var/www/tiketbaris/backend/
+
+# ==========================================
+# STEP 4: RESTART SERVICES (di VPS)
+# ==========================================
+ssh root@72.61.140.193
+
+# Di dalam VPS:
+cd /var/www/tiketbaris/backend
+pm2 restart tiketbaris-backend
+pm2 logs tiketbaris-backend --lines 30
+
+# Reload Nginx
+nginx -t
+nginx -s reload
+
+# Check status
+pm2 status
+systemctl status nginx
+
+# ==========================================
+# STEP 5: VERIFY DEPLOYMENT
+# ==========================================
+
+# Test API
+curl http://localhost:5000/api/health
+curl https://tiketbaris.id/api/health
+
+# Check frontend
+curl -I https://tiketbaris.id
+
+echo "✅ Deployment complete!"
+echo "🌐 Open: https://tiketbaris.id"
+echo "🔄 Hard refresh: Ctrl+Shift+R to clear cache"
+
+# ==========================================
+# ROLLBACK JIKA ADA MASALAH
+# ==========================================
+
+# List backups
+ls -lh /var/www/tiketbaris-backup-*
+
+# Restore dari backup (ganti YYYYMMDD-HHMMSS dengan nama file backup)
+cd /var/www
+rm -rf tiketbaris/backend tiketbaris/frontend
+tar -xzf tiketbaris-backup-YYYYMMDD-HHMMSS.tar.gz
+pm2 restart tiketbaris-backend
+nginx -s reload
+
+echo "✅ Rollback complete"
