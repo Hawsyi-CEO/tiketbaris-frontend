@@ -2,7 +2,7 @@ import api from './api';
 
 export const authService = {
   register: (data) => api.post('/auth/register', data),
-  googleAuth: (credential) => api.post('/auth/google', { credential }),
+  googleAuth: (credential, role = 'user') => api.post('/auth/google', { credential, role }),
   login: (email, password) => api.post('/auth/login', { email, password }),
   verifyToken: () => api.get('/auth/verify'),
   logout: () => {

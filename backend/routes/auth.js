@@ -282,11 +282,15 @@ router.get('/verify', async (req, res) => {
 // Google OAuth Register/Login
 router.post('/google', async (req, res) => {
   try {
-    const { credential } = req.body;
+    const { credential, role = 'user' } = req.body; // Accept role parameter, default to 'user'
     
     if (!credential) {
       return res.status(400).json({ error: 'Google credential required' });
     }
+
+    // Validate role
+    const validRoles = ['user', 'panitia'];
+    const selectedRole = validRoles.includes(role) ? role : 'user';
 
     let ticket;
     try {
@@ -340,14 +344,14 @@ router.post('/google', async (req, res) => {
         userId: user.id
       });
     } else {
-      // New user - register
+      // New user - register with selected role
       isNewUser = true;
       const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
       const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
       const [result] = await conn.execute(
         'INSERT INTO users (username, email, password, role, email_verified, profile_picture, google_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [name || email.split('@')[0], email, hashedPassword, 'user', 1, picture || null, googleId]
+        [name || email.split('@')[0], email, hashedPassword, selectedRole, 1, picture || null, googleId]
       );
 
       user = {

@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('user'); // Role for Google login
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, type: 'info', title: '', message: '' });
@@ -77,7 +78,7 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setLoading(true);
-      const response = await authService.googleAuth(credentialResponse.credential);
+      const response = await authService.googleAuth(credentialResponse.credential, selectedRole);
       
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -278,6 +279,58 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="register-divider">
               <span>atau login dengan</span>
+            </div>
+
+            {/* Role Selection for Google Login */}
+            <div className="form-group">
+              <label className="form-label">
+                <span className="form-label-icon">🎭</span>
+                Login sebagai
+              </label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <label style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  border: selectedRole === 'user' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  background: selectedRole === 'user' ? '#F5F3FF' : 'white'
+                }}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="user"
+                    checked={selectedRole === 'user'}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={{ fontWeight: selectedRole === 'user' ? '600' : '400' }}>
+                    👤 User (Pembeli)
+                  </span>
+                </label>
+                <label style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  border: selectedRole === 'panitia' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  background: selectedRole === 'panitia' ? '#F5F3FF' : 'white'
+                }}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="panitia"
+                    checked={selectedRole === 'panitia'}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={{ fontWeight: selectedRole === 'panitia' ? '600' : '400' }}>
+                    🎭 Panitia
+                  </span>
+                </label>
+              </div>
             </div>
 
             {/* Google Login */}

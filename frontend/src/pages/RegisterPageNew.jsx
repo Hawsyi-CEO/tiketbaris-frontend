@@ -149,8 +149,8 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       
-      // Send credential to backend for verification
-      const response = await authService.googleAuth(credentialResponse.credential);
+      // Send credential to backend for verification with selected role
+      const response = await authService.googleAuth(credentialResponse.credential, formData.role);
       
       // Store token
       localStorage.setItem('token', response.data.token);
@@ -285,6 +285,60 @@ export default function RegisterPage() {
                 <span className="register-error-text">{error}</span>
               </div>
             )}
+
+            {/* Role Selection for Google */}
+            <div className="form-group">
+              <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
+                <span className="form-label-icon">🎭</span>
+                Daftar sebagai
+              </label>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                <label style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  border: formData.role === 'user' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  background: formData.role === 'user' ? '#F5F3FF' : 'white',
+                  textAlign: 'center'
+                }}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="user"
+                    checked={formData.role === 'user'}
+                    onChange={handleChange}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={{ fontWeight: formData.role === 'user' ? '600' : '400' }}>
+                    👤 User (Pembeli Tiket)
+                  </span>
+                </label>
+                <label style={{ 
+                  flex: 1, 
+                  padding: '12px', 
+                  border: formData.role === 'panitia' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  background: formData.role === 'panitia' ? '#F5F3FF' : 'white',
+                  textAlign: 'center'
+                }}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="panitia"
+                    checked={formData.role === 'panitia'}
+                    onChange={handleChange}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <span style={{ fontWeight: formData.role === 'panitia' ? '600' : '400' }}>
+                    🎭 Panitia (Penyelenggara)
+                  </span>
+                </label>
+              </div>
+            </div>
 
             {/* Google Sign Up */}
             <div className="register-google-section">
