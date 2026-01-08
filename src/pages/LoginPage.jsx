@@ -97,143 +97,198 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="register-container">
-      <div className="register-content">
-        <div className="register-left">
-          <div className="register-brand">
-            <h1 className="register-brand-title">🎫 tiketbaris.id</h1>
-            <p className="register-brand-subtitle">Selamat Datang Kembali</p>
-            <p className="register-brand-description">
-              Login untuk melanjutkan akses Anda ke event-event seru dan kelola pembelian tiket Anda dengan mudah.
-            </p>
-            <div className="register-benefits">
-              <div className="register-benefit">
-                <span>✓</span>
-                <p>Transaksi Aman</p>
-              </div>
-              <div className="register-benefit">
-                <span>⚡</span>
-                <p>Pembelian Cepat</p>
-              </div>
-              <div className="register-benefit">
-                <span>📅</span>
-                <p>Event Lengkap</p>
-              </div>
-            </div>
-          </div>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '1rem'
+    }}>
+      {/* Mobile Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1.5rem',
+        maxWidth: '500px',
+        width: '100%',
+        margin: '0 auto 1.5rem auto'
+      }}>
+        <div style={{ color: 'white' }}>
+          <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: '800', margin: 0 }}>🎫 tiketbaris.id</h1>
+        </div>
+        <button 
+          onClick={() => navigate('/')}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          🏠 Beranda
+        </button>
+      </div>
+
+      {/* Login Card */}
+      <div style={{
+        maxWidth: '450px',
+        width: '100%',
+        margin: '0 auto',
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: 'clamp(1.5rem, 4vw, 2.5rem)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+      }}>
+        <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: '700', margin: '0 0 0.5rem 0', color: '#1f2937' }}>
+            🔐 Login
+          </h2>
+          <p style={{ fontSize: 'clamp(0.875rem, 2vw, 1rem)', color: '#6b7280', margin: 0 }}>
+            Akses akun Anda
+          </p>
         </div>
 
-        <div className="register-right">
-          <div className="register-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-              <div>
-                <h2 className="register-title">🔐 Login</h2>
-                <p className="register-subtitle">Akses akun Anda</p>
-              </div>
-              <button 
-                onClick={() => navigate('/')} 
-                type="button"
-                style={{ 
-                  padding: '8px 16px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#4b5563',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#e5e7eb';
-                  e.target.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#f3f4f6';
-                  e.target.style.transform = 'translateY(0)';
-                }}
-              >
-                🏠 Beranda
-              </button>
-            </div>
-
-            {error && (
-              <div className="alert alert-error">
-                <span>❌</span> {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="register-form">
-              <div className="form-group">
-                <label className="form-label">📧 Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">🔒 Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="register-button" disabled={loading}>
-                {loading ? '⏳ Loading...' : '🚀 Login Sekarang'}
-              </button>
-            </form>
-
-            <div style={{ margin: '20px 0', textAlign: 'center', position: 'relative' }}>
-              <div style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                left: 0, 
-                right: 0, 
-                height: '1px', 
-                backgroundColor: '#e5e7eb' 
-              }}></div>
-              <span style={{ 
-                position: 'relative', 
-                backgroundColor: 'white', 
-                padding: '0 15px', 
-                color: '#6b7280',
-                fontSize: '14px'
-              }}>atau login dengan</span>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-                theme="outline"
-                size="large"
-                text="continue_with"
-                shape="rectangular"
-                logo_alignment="left"
-              />
-            </div>
-
-            <div className="register-footer">
-              <p>Belum punya akun?</p>
-              <button 
-                onClick={() => navigate('/register')}
-                className="register-login-link"
-              >
-                📝 Daftar Di Sini
-              </button>
-            </div>
+        {error && (
+          <div style={{
+            padding: '0.75rem',
+            backgroundColor: '#fee2e2',
+            color: '#991b1b',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            fontSize: '0.875rem'
+          }}>
+            ❌ {error}
           </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', fontSize: 'clamp(0.875rem, 2vw, 1rem)', color: '#374151' }}>
+              📧 Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nama@email.com"
+              style={{
+                width: '100%',
+                padding: 'clamp(0.75rem, 2vw, 1rem)',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                outline: 'none',
+                transition: 'all 0.2s',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem', fontSize: 'clamp(0.875rem, 2vw, 1rem)', color: '#374151' }}>
+              🔒 Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              style={{
+                width: '100%',
+                padding: 'clamp(0.75rem, 2vw, 1rem)',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                outline: 'none',
+                transition: 'all 0.2s',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              required
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: 'clamp(0.875rem, 2.5vw, 1rem)',
+              background: loading ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: 'clamp(1rem, 2.5vw, 1.125rem)',
+              fontWeight: '700',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(102,126,234,0.3)'
+            }}
+            onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-2px)')}
+            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            {loading ? '⏳ Loading...' : '🚀 Login Sekarang'}
+          </button>
+        </form>
+
+        <div style={{ margin: '1.5rem 0', textAlign: 'center', position: 'relative' }}>
+          <div style={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: 0, 
+            right: 0, 
+            height: '1px', 
+            backgroundColor: '#e5e7eb' 
+          }}></div>
+          <span style={{ 
+            position: 'relative', 
+            backgroundColor: 'white', 
+            padding: '0 1rem', 
+            color: '#6b7280',
+            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+          }}>atau login dengan</span>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            useOneTap
+            theme="outline"
+            size="large"
+            text="continue_with"
+            shape="rectangular"
+            logo_alignment="left"
+            width="100%"
+          />
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
+          <p style={{ color: '#6b7280', margin: '0 0 0.5rem 0' }}>Belum punya akun?</p>
+          <button 
+            onClick={() => navigate('/register')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#667eea',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+              textDecoration: 'underline'
+            }}
+          >
+            📝 Daftar Di Sini
+          </button>
         </div>
       </div>
 
