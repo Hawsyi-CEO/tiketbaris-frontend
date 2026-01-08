@@ -132,19 +132,25 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Login Form Section */}
-      <div className="flex flex-col items-center justify-center px-4 py-12 md:py-0">
-        <div className="w-full max-w-sm">
-          {/* Header with Home Button */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex-1">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">Login</h2>
-              <p className="text-sm sm:text-base text-gray-600">Akses akun Anda untuk membeli tiket</p>
+      {/* Login Form Section - MOBILE OPTIMIZED */}
+      <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-0">
+        {/* Mobile Brand Header - Tampil di HP saja */}
+        <div className="md:hidden w-full text-center mb-6">
+          <h1 className="text-3xl font-black text-red-600 mb-1">tiketbaris.id</h1>
+          <p className="text-sm text-gray-600">Platform Tiket Terpercaya</p>
+        </div>
+
+        <div className="w-full max-w-md">
+          {/* Header with Home Button - MOBILE OPTIMIZED */}
+          <div className="flex justify-between items-center gap-2 mb-5">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">Login</h2>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">Akses akun Anda</p>
             </div>
             <button 
               onClick={() => navigate('/')} 
               type="button"
-              className="px-3 py-2 sm:px-4 sm:py-2 md:px-4 md:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+              className="flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-semibold transition-colors"
             >
               ← Beranda
             </button>
@@ -152,40 +158,40 @@ export default function LoginPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-4 sm:mb-6 text-sm border border-red-200">
+            <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg mb-4 text-sm border border-red-200">
               {error}
             </div>
           )}
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
+          {/* Login Form - MOBILE OPTIMIZED */}
+          <form onSubmit={handleSubmit} className="space-y-4 mb-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm sm:text-base"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm sm:text-base"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm"
                 required
               />
             </div>
 
             <button 
               type="submit" 
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 sm:py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-sm"
               disabled={loading}
             >
               {loading ? 'Sedang Memproses...' : 'Login'}
@@ -193,25 +199,29 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 mb-4">
             <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">atau</span>
+            <span className="text-xs text-gray-500">atau</span>
             <div className="flex-1 h-px bg-gray-200"></div>
           </div>
 
-          {/* Google Login */}
-          <div className="mb-4 sm:mb-6 flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              text="signin_with"
-            />
+          {/* Google Login - MOBILE OPTIMIZED */}
+          <div className="mb-5 flex justify-center">
+            <div className="scale-90 sm:scale-100">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                text="signin_with"
+                size="large"
+                width="280"
+              />
+            </div>
           </div>
 
-          {/* Sign Up & Forgot Password */}
-          <div className="space-y-3 sm:space-y-4 text-center border-t border-gray-200 pt-4 sm:pt-6">
+          {/* Sign Up & Forgot Password - MOBILE OPTIMIZED */}
+          <div className="space-y-3 text-center border-t border-gray-200 pt-4">
             <div>
-              <p className="text-gray-600 text-xs sm:text-sm mb-2">Belum punya akun?</p>
+              <p className="text-gray-600 text-xs mb-2">Belum punya akun?</p>
               <button 
                 onClick={() => navigate('/register')}
                 className="text-red-600 hover:text-red-700 font-semibold text-sm transition-colors"
@@ -219,7 +229,7 @@ export default function LoginPage() {
                 Daftar Sekarang
               </button>
             </div>
-            <a href="#" className="block text-red-600 hover:text-red-700 text-xs sm:text-xs transition-colors">
+            <a href="#" className="block text-red-600 hover:text-red-700 text-xs transition-colors">
               Lupa password?
             </a>
           </div>
