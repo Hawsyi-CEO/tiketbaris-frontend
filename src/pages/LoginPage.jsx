@@ -102,152 +102,136 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-        {/* Left Side - Brand Info (hidden on mobile) */}
-        <div className="login-brand-section" style={{ 
-          flex: 1, 
-          background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
-          color: 'white',
-          padding: '60px 40px',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '42px', fontWeight: '800', margin: '0 0 15px 0' }}>🎫 tiketbaris.id</h1>
-            <p style={{ fontSize: '18px', margin: '0 0 10px 0', opacity: 0.9 }}>Platform Tiket Terpercaya</p>
-            <p style={{ fontSize: '14px', margin: '0 0 40px 0', opacity: 0.8, maxWidth: '300px', lineHeight: '1.6' }}>
-              Beli tiket event favorit Anda dengan mudah dan aman. Ribuan event menanti Anda!
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '16px' }}>
-                <span style={{ fontSize: '24px' }}>✅</span>
-                <p style={{ margin: 0 }}>Transaksi Aman</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '16px' }}>
-                <span style={{ fontSize: '24px' }}>🚀</span>
-                <p style={{ margin: 0 }}>Pembelian Cepat</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '16px' }}>
-                <span style={{ fontSize: '24px' }}>🎯</span>
-                <p style={{ margin: 0 }}>Event Lengkap</p>
-              </div>
+    <div className="min-h-screen bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-0">
+      {/* Brand Section - Responsive */}
+      <div className="hidden md:flex bg-gradient-to-br from-red-600 to-red-900 text-white p-12 lg:p-16 items-center justify-center">
+        <div className="text-center space-y-6 md:space-y-8">
+          <div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-2 md:mb-4">tiketbaris.id</h1>
+            <p className="text-lg md:text-xl font-semibold opacity-95">Platform Tiket Terpercaya</p>
+          </div>
+
+          <p className="text-sm md:text-base opacity-90 max-w-sm mx-auto leading-relaxed">
+            Beli tiket event favorit Anda dengan mudah dan aman. Ribuan event menanti Anda!
+          </p>
+
+          <div className="space-y-3 md:space-y-4 pt-6 md:pt-8">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-2xl md:text-3xl">✓</div>
+              <p className="text-base md:text-lg">Transaksi Aman</p>
+            </div>
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-2xl md:text-3xl">⚡</div>
+              <p className="text-base md:text-lg">Pembelian Cepat</p>
+            </div>
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="text-2xl md:text-3xl">📅</div>
+              <p className="text-base md:text-lg">Event Lengkap</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Right Side - Login Form */}
-        <div style={{ 
-          display: 'flex', 
-          flex: 1, 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          padding: 'clamp(20px, 5vw, 40px)'
-        }}>
-          <div className="card" style={{ maxWidth: '450px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-              <div>
-                <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: '700', color: '#1f2937', margin: '0 0 10px 0' }}>🔐 Masuk Ke Akun</h2>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Akses akun Anda untuk membeli tiket</p>
-              </div>
-              <button 
-                onClick={() => navigate('/')} 
-                type="button"
-                style={{ 
-                  padding: '8px 16px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#4b5563',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#e5e7eb'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-              >
-                🏠 Beranda
-              </button>
+      {/* Login Form Section - MOBILE OPTIMIZED */}
+      <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-0">
+        {/* Mobile Brand Header - Tampil di HP saja */}
+        <div className="md:hidden w-full text-center mb-6">
+          <h1 className="text-3xl font-black text-red-600 mb-1">tiketbaris.id</h1>
+          <p className="text-sm text-gray-600">Platform Tiket Terpercaya</p>
+        </div>
+
+        <div className="w-full max-w-md">
+          {/* Header with Home Button - MOBILE OPTIMIZED */}
+          <div className="flex justify-between items-center gap-2 mb-5">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">Login</h2>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">Akses akun Anda</p>
             </div>
-            <div style={{ marginBottom: '20px' }}></div>
+            <button 
+              onClick={() => navigate('/')} 
+              type="button"
+              className="flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-semibold transition-colors"
+            >
+              ← Beranda
+            </button>
+          </div>
 
-            {error && (
-              <div style={{ 
-                backgroundColor: '#fee2e2', 
-                color: '#991b1b',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                fontSize: '14px',
-                border: '1px solid #fecaca'
-              }}>
-                <span>❌ </span>
-                {error}
-              </div>
-            )}
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg mb-4 text-sm border border-red-200">
+              {error}
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="form-group">
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}>📧 Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="masukkan@email.com"
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}>🔒 Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                {loading ? '⏳ Loading...' : '🚀 Login Sekarang'}
-              </button>
-            </form>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '25px 0', color: '#6b7280', fontSize: '13px' }}>
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
-              <span>atau login dengan</span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
+          {/* Login Form - MOBILE OPTIMIZED */}
+          <form onSubmit={handleSubmit} className="space-y-4 mb-5">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@email.com"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm"
+                required
+              />
             </div>
 
-            <div style={{ marginBottom: '25px' }}>
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-sm"
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base shadow-sm"
+              disabled={loading}
+            >
+              {loading ? 'Sedang Memproses...' : 'Login'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <span className="text-xs text-gray-500">atau</span>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          {/* Google Login - MOBILE OPTIMIZED */}
+          <div className="mb-5 flex justify-center">
+            <div className="scale-90 sm:scale-100">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 text="signin_with"
-                width="100%"
+                size="large"
+                width="280"
               />
             </div>
+          </div>
 
-            <div style={{ textAlign: 'center', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 10px 0' }}>Belum punya akun?</p>
+          {/* Sign Up & Forgot Password - MOBILE OPTIMIZED */}
+          <div className="space-y-3 text-center border-t border-gray-200 pt-4">
+            <div>
+              <p className="text-gray-600 text-xs mb-2">Belum punya akun?</p>
               <button 
                 onClick={() => navigate('/register')}
-                style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                className="text-red-600 hover:text-red-700 font-semibold text-sm transition-colors"
               >
-                📝 Daftar Sekarang
+                Daftar Sekarang
               </button>
             </div>
-
-            <div style={{ textAlign: 'center', marginTop: '15px' }}>
-              <a href="#" style={{ fontSize: '13px', color: '#dc2626', textDecoration: 'none' }}>Lupa password?</a>
-            </div>
+            <a href="#" className="block text-red-600 hover:text-red-700 text-xs transition-colors">
+              Lupa password?
+            </a>
           </div>
         </div>
       </div>
