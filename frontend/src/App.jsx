@@ -13,7 +13,7 @@ const GOOGLE_CLIENT_ID = "430088254458-1t6ush1pb5ujoa157p4atkfthmv2olc5.apps.goo
 // Pages
 import StartupGuidePage from './pages/StartupGuidePage';
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
+import LoginPageNew from './pages/LoginPageNew';
 import RegisterPageNew from './pages/RegisterPageNew';
 
 // Responsive Dashboard Pages
@@ -129,7 +129,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/startup" element={<StartupGuidePage />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/login" element={<LoginPageNew />} />
             <Route path="/register" element={<RegisterPageNew />} />
             <Route path="/diagnostics" element={<DiagnosticsPage />} />
           
