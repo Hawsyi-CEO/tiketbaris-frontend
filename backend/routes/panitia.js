@@ -350,7 +350,7 @@ router.put('/events/:eventId', authenticateToken, checkRole(['panitia']), async 
     
     // Verify ownership
     const [events] = await conn.execute(
-      'SELECT id FROM events WHERE id = ? AND user_id = ?',
+      'SELECT id, image_url FROM events WHERE id = ? AND user_id = ?',
       [eventId, userId]
     );
 
@@ -359,12 +359,25 @@ router.put('/events/:eventId', authenticateToken, checkRole(['panitia']), async 
       return res.status(404).json({ error: 'Event tidak ditemukan atau Anda tidak memiliki akses' });
     }
 
-    // Update event
+    // Use existing image_url if not provided (undefined or null)
+    const finalImageUrl = image_url !== undefined && image_url !== null ? image_url : events[0].image_url;
+
+    // Update event - ensure no undefined values
     await conn.execute(
       `UPDATE events 
        SET title = ?, description = ?, date = ?, location = ?, price = ?, stock = ?, image_url = ?
        WHERE id = ? AND user_id = ?`,
-      [title, description, date, location, parsedPrice, parsedCapacity, image_url, eventId, userId]
+      [
+        title || null, 
+        description || null, 
+        date || null, 
+        location || null, 
+        parsedPrice, 
+        parsedCapacity, 
+        finalImageUrl || null, 
+        eventId, 
+        userId
+      ]
     );
 
     await conn.release();
