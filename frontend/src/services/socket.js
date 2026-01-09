@@ -20,10 +20,12 @@ class SocketService {
         token: token
       },
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
-      transports: ['websocket', 'polling']
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: 3,
+      transports: ['polling', 'websocket'], // Try polling first, fallback to websocket
+      upgrade: true,
+      rememberUpgrade: true
     });
 
     // Connection event handlers
@@ -34,27 +36,34 @@ class SocketService {
 
     this.socket.on('disconnect', (reason) => {
       this.isConnected = false;
-      console.log('❌ Disconnected from WebSocket server:', reason);
+      // Only log if not a planned disconnect
+      if (reason !== 'io client disconnect') {
+        console.log('❌ Disconnected from WebSocket server:', reason);
+      }
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('🚨 Connection error:', error.message);
+      // Silent for CORS and permission errors (non-blocking)
+      if (!error.message.includes('403') && !error.message.includes('CORS')) {
+        console.warn('⚠️ WebSocket connection issue (non-critical):', error.message);
+      }
     });
 
     this.socket.on('reconnect', (attemptNumber) => {
-      console.log('🔄 Reconnected after', attemptNumber, 'attempts');
+      console.log('🔄 Reconnected to WebSocket');
     });
 
-    this.socket.on('reconnect_attempt', (attemptNumber) => {
-      console.log('🔄 Reconnection attempt', attemptNumber);
-    });
+    // Suppress reconnection attempt logs (too verbose)
+    // this.socket.on('reconnect_attempt', (attemptNumber) => {
+    //   console.log('🔄 Reconnection attempt', attemptNumber);
+    // });
 
     this.socket.on('reconnect_error', (error) => {
-      console.error('🚨 Reconnection error:', error.message);
+      // Silent, will retry automatically
     });
 
     this.socket.on('reconnect_failed', () => {
-      console.error('💥 Reconnection failed after all attempts');
+      console.warn('⚠️ WebSocket unavailable - app will work without real-time updates');
     });
 
     return this.socket;
