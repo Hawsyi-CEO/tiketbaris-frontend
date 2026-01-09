@@ -4,7 +4,7 @@ import axios from 'axios';
 import jsQR from 'jsqr';
 import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, ResponsiveGrid, MobileNavigation, StatsCard, NotificationToast } from '../../components/ResponsiveComponents';
 import socketService from '../../services/socket';
-import { API_URL } from '../../config/api';
+import { API_URL, DOMAIN } from '../../config/api';
 
 const DashboardPanitiaResponsive = () => {
   const navigate = useNavigate();
@@ -539,7 +539,7 @@ const DashboardPanitiaResponsive = () => {
               <div className="aspect-video bg-gradient-to-r from-green-200 to-blue-200 rounded-lg mb-3 flex items-center justify-center">
                 {event.image_url ? (
                   <img
-                    src={event.image_url}
+                    src={`${DOMAIN}${event.image_url}`}
                     alt={event.title}
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -618,7 +618,7 @@ const DashboardPanitiaResponsive = () => {
               <div className="aspect-video bg-gradient-to-r from-green-200 to-blue-200 relative">
                 {event.image_url ? (
                   <img
-                    src={event.image_url}
+                    src={`${DOMAIN}${event.image_url}`}
                     alt={event.title}
                     className="w-full h-full object-cover"
                   />
