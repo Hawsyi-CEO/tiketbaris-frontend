@@ -26,6 +26,11 @@ const DashboardPanitiaResponsive = () => {
   const scanIntervalRef = useRef(null);
   const streamRef = useRef(null);
   const animationFrameRef = useRef(null);
+  
+  // Edit Profile States
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [profileData, setProfileData] = useState({ name: '', email: '' });
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   // Mobile navigation items
   const mobileNavItems = [
@@ -163,6 +168,35 @@ const DashboardPanitiaResponsive = () => {
     localStorage.removeItem('token');
     navigate('/');
     showNotification('success', 'Logout berhasil');
+  };
+
+  const handleOpenEditProfile = () => {
+    setProfileData({ 
+      name: panitia?.name || '', 
+      email: panitia?.email || '' 
+    });
+    setShowEditProfile(true);
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API_URL}/panitia/profile`, profileData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setPanitia(prev => ({ ...prev, name: profileData.name, email: profileData.email }));
+      showNotification('success', 'Profile berhasil diupdate!');
+      setShowEditProfile(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showNotification('error', error.response?.data?.error || 'Gagal update profile');
+    } finally {
+      setIsUpdatingProfile(false);
+    }
   };
 
   const handleScanTicket = async (ticketCode) => {
@@ -985,7 +1019,7 @@ const DashboardPanitiaResponsive = () => {
         </div>
 
         <div className="space-y-3">
-          <InteractiveButton variant="secondary" fullWidth>
+          <InteractiveButton variant="secondary" fullWidth onClick={handleOpenEditProfile}>
             ✏️ Edit Profile
           </InteractiveButton>
           <InteractiveButton variant="warning" fullWidth>
@@ -1084,6 +1118,70 @@ const DashboardPanitiaResponsive = () => {
           isVisible={notification.show}
           onClose={() => setNotification({ ...notification, show: false })}
         />
+
+        {/* Edit Profile Modal */}
+        {showEditProfile && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowEditProfile(false)}>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">✏️ Edit Profile</h2>
+                <button 
+                  onClick={() => setShowEditProfile(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nama Lengkap
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Masukkan nama lengkap"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Masukkan email"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditProfile(false)}
+                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdatingProfile}
+                    className="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUpdatingProfile ? 'Menyimpan...' : 'Simpan'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </ResponsiveLayout>
   );
