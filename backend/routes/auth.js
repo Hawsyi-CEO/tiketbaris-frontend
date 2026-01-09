@@ -284,7 +284,15 @@ router.post('/google', async (req, res) => {
   try {
     const { credential, role } = req.body; // role is optional
     
+    console.log('[GOOGLE AUTH] Request received:', { 
+      hasCredential: !!credential, 
+      credentialLength: credential?.length,
+      role: role,
+      bodyKeys: Object.keys(req.body)
+    });
+    
     if (!credential) {
+      console.log('[GOOGLE AUTH] ERROR: No credential provided');
       return res.status(400).json({ error: 'Google credential required' });
     }
 

@@ -81,8 +81,13 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setLoading(true);
+      console.log('[GOOGLE AUTH] Credential received:', {
+        hasCredential: !!credentialResponse.credential,
+        credentialLength: credentialResponse.credential?.length
+      });
       // Step 1: Try login without role (check if user exists)
       const response = await authService.googleAuth(credentialResponse.credential, null);
+      console.log('[GOOGLE AUTH] Backend response:', response.data);
       
       // If backend returns requiresRole, show modal
       if (response.data.requiresRole) {
@@ -335,7 +340,6 @@ export default function LoginPage() {
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
-                useOneTap
                 theme="outline"
                 size="large"
                 text="signin_with"
