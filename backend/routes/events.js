@@ -39,7 +39,14 @@ router.get('/', async (req, res) => {
   try {
     const conn = await pool.getConnection();
     const [events] = await conn.execute(
-      'SELECT id, title, description, date, location, price, current_stock as stock, image_url, status FROM events WHERE status = ? AND is_hidden = 0 ORDER BY date ASC',
+      `SELECT 
+        e.id, e.title, e.description, e.date, e.location, e.price, 
+        e.current_stock as stock, e.image_url, e.status,
+        u.name as organizer
+       FROM events e
+       LEFT JOIN users u ON e.user_id = u.id
+       WHERE e.status = ? AND e.is_hidden = 0 
+       ORDER BY e.date ASC`,
       ['active']
     );
     await conn.release();
@@ -56,7 +63,10 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const conn = await pool.getConnection();
     const [events] = await conn.execute(
-      'SELECT * FROM events WHERE id = ? AND status = ? AND is_hidden = 0',
+      `SELECT e.*, u.name as organizer, u.email as organizer_email
+       FROM events e
+       LEFT JOIN users u ON e.user_id = u.id
+       WHERE e.id = ? AND e.status = ? AND e.is_hidden = 0`,
       [id, 'active']
     );
     await conn.release();
