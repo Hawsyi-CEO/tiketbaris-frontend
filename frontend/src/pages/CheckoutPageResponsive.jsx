@@ -70,6 +70,38 @@ const CheckoutPageResponsive = () => {
     return event.price * checkoutData.quantity;
   };
 
+  // Load Midtrans Snap script
+  useEffect(() => {
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="snap.js"]');
+    if (existingScript) {
+      console.log('✅ Midtrans Snap script already loaded');
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://app.midtrans.com/snap/snap.js';
+    script.setAttribute('data-client-key', 'Mid-client-Ms71No4NYCdv7Ri-');
+    
+    script.onload = () => {
+      console.log('🚀 Midtrans Snap loaded - PRODUCTION MODE');
+    };
+    
+    script.onerror = () => {
+      console.error('❌ Failed to load Midtrans Snap script');
+      showNotification('error', 'Gagal memuat sistem pembayaran. Silakan refresh halaman.');
+    };
+    
+    document.head.appendChild(script);
+
+    return () => {
+      const scriptToRemove = document.querySelector('script[src*="snap.js"]');
+      if (scriptToRemove) {
+        document.head.removeChild(scriptToRemove);
+      }
+    };
+  }, []);
+
   // Check if Midtrans Snap is loaded
   useEffect(() => {
     // Wait for Snap to be available
