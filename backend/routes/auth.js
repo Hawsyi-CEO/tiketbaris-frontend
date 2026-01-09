@@ -282,15 +282,11 @@ router.get('/verify', async (req, res) => {
 // Google OAuth Register/Login
 router.post('/google', async (req, res) => {
   try {
-    const { credential, role = 'user' } = req.body; // Accept role parameter, default to 'user'
+    const { credential, role } = req.body; // role is optional
     
     if (!credential) {
       return res.status(400).json({ error: 'Google credential required' });
     }
-
-    // Validate role
-    const validRoles = ['user', 'panitia'];
-    const selectedRole = validRoles.includes(role) ? role : 'user';
 
     let ticket;
     try {
@@ -344,6 +340,21 @@ router.post('/google', async (req, res) => {
         userId: user.id
       });
     } else {
+      // New user - check if role is provided
+      if (!role) {
+        // Role not provided, ask frontend to show modal
+        await conn.release();
+        return res.status(200).json({ 
+          requiresRole: true,
+          email: email,
+          name: name
+        });
+      }
+
+      // Validate role
+      const validRoles = ['user', 'panitia'];
+      const selectedRole = validRoles.includes(role) ? role : 'user';
+
       // New user - register with selected role
       isNewUser = true;
       const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
@@ -358,7 +369,7 @@ router.post('/google', async (req, res) => {
         id: result.insertId,
         username: name || email.split('@')[0],
         email: email,
-        role: 'user',
+        role: selectedRole,
         email_verified: 1,
         profile_picture: picture || null
       };
@@ -367,7 +378,8 @@ router.post('/google', async (req, res) => {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         email: email,
-        userId: user.id
+        userId: user.id,
+        role: selectedRole
       });
     }
 

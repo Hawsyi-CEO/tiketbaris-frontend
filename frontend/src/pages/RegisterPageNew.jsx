@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { authService } from '../services/apiServices';
 import NotificationModal from '../components/NotificationModal';
 import Toast from '../components/Toast';
+import RoleSelectionModal from '../components/RoleSelectionModal';
 import './RegisterPage.css';
 
 export default function RegisterPage() {
@@ -21,6 +22,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, type: 'info', title: '', message: '' });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [pendingCredential, setPendingCredential] = useState(null);
+  const [roleModalLoading, setRoleModalLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -149,15 +153,24 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       
-      // Send credential to backend for verification with selected role
-      const response = await authService.googleAuth(credentialResponse.credential, formData.role);
+      // Step 1: Try without role (check if user exists)
+      const response = await authService.googleAuth(credentialResponse.credential, null);
       
-      // Store token
+      // If backend returns requiresRole, show modal
+      if (response.data.requiresRole) {
+        setPendingCredential(credentialResponse.credential);
+        setRoleModalOpen(true);
+        setLoading(false);
+        return;
+      }
+      
+      // User exists, proceed with login
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       
       setToast({ 
         show: true, 
-        message: response.data.isNewUser ? '✅ Berhasil daftar dengan Google!' : '✅ Berhasil login dengan Google!', 
+        message: '✅ Berhasil login dengan Google!', 
         type: 'success' 
       });
       
@@ -178,6 +191,42 @@ export default function RegisterPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleSelection = async (selectedRole) => {
+    try {
+      setRoleModalLoading(true);
+      // Step 2: Create account with selected role
+      const response = await authService.googleAuth(pendingCredential, selectedRole);
+      
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      setRoleModalOpen(false);
+      setToast({ 
+        show: true, 
+        message: `🎉 Selamat datang, ${response.data.user.username}!`, 
+        type: 'success' 
+      });
+      
+      setTimeout(() => {
+        const role = response.data.user?.role;
+        if (role === 'admin') navigate('/admin/dashboard');
+        else if (role === 'panitia') navigate('/panitia/dashboard');
+        else navigate('/user/dashboard');
+      }, 1500);
+    } catch (err) {
+      setRoleModalOpen(false);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Registrasi Gagal',
+        message: err.response?.data?.error || 'Terjadi kesalahan saat membuat akun'
+      });
+    } finally {
+      setRoleModalLoading(false);
+      setPendingCredential(null);
     }
   };
 
@@ -285,60 +334,6 @@ export default function RegisterPage() {
                 <span className="register-error-text">{error}</span>
               </div>
             )}
-
-            {/* Role Selection for Google */}
-            <div className="form-group">
-              <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
-                <span className="form-label-icon">🎭</span>
-                Daftar sebagai
-              </label>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                <label style={{ 
-                  flex: 1, 
-                  padding: '12px', 
-                  border: formData.role === 'user' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  background: formData.role === 'user' ? '#F5F3FF' : 'white',
-                  textAlign: 'center'
-                }}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="user"
-                    checked={formData.role === 'user'}
-                    onChange={handleChange}
-                    style={{ marginRight: '8px' }}
-                  />
-                  <span style={{ fontWeight: formData.role === 'user' ? '600' : '400' }}>
-                    👤 User (Pembeli Tiket)
-                  </span>
-                </label>
-                <label style={{ 
-                  flex: 1, 
-                  padding: '12px', 
-                  border: formData.role === 'panitia' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  background: formData.role === 'panitia' ? '#F5F3FF' : 'white',
-                  textAlign: 'center'
-                }}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="panitia"
-                    checked={formData.role === 'panitia'}
-                    onChange={handleChange}
-                    style={{ marginRight: '8px' }}
-                  />
-                  <span style={{ fontWeight: formData.role === 'panitia' ? '600' : '400' }}>
-                    🎭 Panitia (Penyelenggara)
-                  </span>
-                </label>
-              </div>
-            </div>
 
             {/* Google Sign Up */}
             <div className="register-google-section">
@@ -540,6 +535,17 @@ export default function RegisterPage() {
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
+
+      {/* Role Selection Modal */}
+      <RoleSelectionModal
+        isOpen={roleModalOpen}
+        onSelectRole={handleRoleSelection}
+        onClose={() => {
+          setRoleModalOpen(false);
+          setPendingCredential(null);
+        }}
+        loading={roleModalLoading}
+      />
     </div>
   );
 }

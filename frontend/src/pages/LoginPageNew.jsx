@@ -4,17 +4,20 @@ import { GoogleLogin } from '@react-oauth/google';
 import { authService } from '../services/apiServices';
 import NotificationModal from '../components/NotificationModal';
 import Toast from '../components/Toast';
+import RoleSelectionModal from '../components/RoleSelectionModal';
 import './RegisterPage.css';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('user'); // Role for Google login
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ isOpen: false, type: 'info', title: '', message: '' });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [pendingCredential, setPendingCredential] = useState(null);
+  const [roleModalLoading, setRoleModalLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -78,14 +81,24 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setLoading(true);
-      const response = await authService.googleAuth(credentialResponse.credential, selectedRole);
+      // Step 1: Try login without role (check if user exists)
+      const response = await authService.googleAuth(credentialResponse.credential, null);
       
+      // If backend returns requiresRole, show modal
+      if (response.data.requiresRole) {
+        setPendingCredential(credentialResponse.credential);
+        setRoleModalOpen(true);
+        setLoading(false);
+        return;
+      }
+      
+      // User exists, proceed with login
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
       setToast({ 
         show: true, 
-        message: `🎉 Selamat datang, ${response.data.user.username}!`, 
+        message: `🎉 Selamat datang kembali, ${response.data.user.username}!`, 
         type: 'success' 
       });
       
@@ -104,6 +117,42 @@ export default function LoginPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleSelection = async (selectedRole) => {
+    try {
+      setRoleModalLoading(true);
+      // Step 2: Create account with selected role
+      const response = await authService.googleAuth(pendingCredential, selectedRole);
+      
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      setRoleModalOpen(false);
+      setToast({ 
+        show: true, 
+        message: `🎉 Selamat datang, ${response.data.user.username}!`, 
+        type: 'success' 
+      });
+      
+      setTimeout(() => {
+        const role = response.data.user?.role;
+        if (role === 'admin') navigate('/admin/dashboard');
+        else if (role === 'panitia') navigate('/panitia/dashboard');
+        else navigate('/user/dashboard');
+      }, 1500);
+    } catch (err) {
+      setRoleModalOpen(false);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Registrasi Gagal',
+        message: err.response?.data?.message || 'Terjadi kesalahan saat membuat akun'
+      });
+    } finally {
+      setRoleModalLoading(false);
+      setPendingCredential(null);
     }
   };
 
@@ -281,58 +330,6 @@ export default function LoginPage() {
               <span>atau login dengan</span>
             </div>
 
-            {/* Role Selection for Google Login */}
-            <div className="form-group">
-              <label className="form-label">
-                <span className="form-label-icon">🎭</span>
-                Login sebagai
-              </label>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <label style={{ 
-                  flex: 1, 
-                  padding: '12px', 
-                  border: selectedRole === 'user' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  background: selectedRole === 'user' ? '#F5F3FF' : 'white'
-                }}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="user"
-                    checked={selectedRole === 'user'}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    style={{ marginRight: '8px' }}
-                  />
-                  <span style={{ fontWeight: selectedRole === 'user' ? '600' : '400' }}>
-                    👤 User (Pembeli)
-                  </span>
-                </label>
-                <label style={{ 
-                  flex: 1, 
-                  padding: '12px', 
-                  border: selectedRole === 'panitia' ? '2px solid #7C3AED' : '2px solid #E5E7EB',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  background: selectedRole === 'panitia' ? '#F5F3FF' : 'white'
-                }}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="panitia"
-                    checked={selectedRole === 'panitia'}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    style={{ marginRight: '8px' }}
-                  />
-                  <span style={{ fontWeight: selectedRole === 'panitia' ? '600' : '400' }}>
-                    🎭 Panitia
-                  </span>
-                </label>
-              </div>
-            </div>
-
             {/* Google Login */}
             <div className="register-google">
               <GoogleLogin
@@ -383,6 +380,17 @@ export default function LoginPage() {
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
+
+      {/* Role Selection Modal */}
+      <RoleSelectionModal
+        isOpen={roleModalOpen}
+        onSelectRole={handleRoleSelection}
+        onClose={() => {
+          setRoleModalOpen(false);
+          setPendingCredential(null);
+        }}
+        loading={roleModalLoading}
+      />
     </div>
   );
 }

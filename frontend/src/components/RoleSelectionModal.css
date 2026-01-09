@@ -1,0 +1,264 @@
+/* Role Selection Modal */
+.role-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.role-modal-container {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.role-modal-header {
+  padding: 32px 32px 24px;
+  text-align: center;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.role-modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 8px;
+}
+
+.role-modal-subtitle {
+  font-size: 15px;
+  color: #6B7280;
+  margin: 0;
+}
+
+.role-modal-body {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.role-option {
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.role-option:hover {
+  border-color: #7C3AED;
+  background: #F9FAFB;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+}
+
+.role-option-selected {
+  border-color: #7C3AED;
+  background: #F5F3FF;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+}
+
+.role-option-icon {
+  font-size: 48px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.role-option-content {
+  flex: 1;
+}
+
+.role-option-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 6px;
+}
+
+.role-option-description {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.role-option-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.role-option-features li {
+  font-size: 13px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+}
+
+.role-option-radio {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.role-option-radio input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #7C3AED;
+}
+
+.role-modal-footer {
+  padding: 24px 32px 32px;
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.role-modal-button {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.role-modal-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.role-modal-button-secondary {
+  background: white;
+  color: #374151;
+  border: 2px solid #E5E7EB;
+}
+
+.role-modal-button-secondary:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.role-modal-button-primary {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.role-modal-button-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.role-modal-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .role-modal-container {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+  }
+
+  .role-modal-header {
+    padding: 24px 20px 20px;
+  }
+
+  .role-modal-title {
+    font-size: 24px;
+  }
+
+  .role-modal-subtitle {
+    font-size: 14px;
+  }
+
+  .role-modal-body {
+    padding: 20px;
+  }
+
+  .role-option {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .role-option-icon {
+    font-size: 40px;
+  }
+
+  .role-option-radio {
+    margin-top: 8px;
+  }
+
+  .role-modal-footer {
+    padding: 20px;
+    flex-direction: column;
+  }
+
+  .role-modal-button {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}
