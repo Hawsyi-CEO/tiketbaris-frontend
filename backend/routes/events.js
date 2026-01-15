@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
       `SELECT 
         e.id, e.title, e.description, e.date, e.location, e.price, 
         e.current_stock as stock, e.image_url, e.status,
-        u.name as organizer
+        u.username as organizer
        FROM events e
        LEFT JOIN users u ON e.user_id = u.id
        WHERE e.status = ? AND e.is_hidden = 0 
@@ -63,7 +63,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const conn = await pool.getConnection();
     const [events] = await conn.execute(
-      `SELECT e.*, u.name as organizer, u.email as organizer_email
+      `SELECT e.*, u.username as organizer, u.email as organizer_email
        FROM events e
        LEFT JOIN users u ON e.user_id = u.id
        WHERE e.id = ? AND e.status = ? AND e.is_hidden = 0`,

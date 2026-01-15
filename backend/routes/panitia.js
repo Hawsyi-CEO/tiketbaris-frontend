@@ -432,7 +432,7 @@ router.get('/profile', authenticateToken, checkRole(['panitia']), async (req, re
     const conn = await pool.getConnection();
     
     const [users] = await conn.execute(
-      'SELECT id, username, name, email, role, profile_picture, phone, address, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, role, profile_picture, phone, address, created_at FROM users WHERE id = ?',
       [userId]
     );
     
@@ -453,11 +453,11 @@ router.get('/profile', authenticateToken, checkRole(['panitia']), async (req, re
 router.put('/profile', authenticateToken, checkRole(['panitia']), async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email } = req.body;
+    const { email } = req.body;
 
     // Validation
-    if (!name || !email) {
-      return res.status(400).json({ error: 'Nama dan email harus diisi' });
+    if (!email) {
+      return res.status(400).json({ error: 'Email harus diisi' });
     }
 
     const conn = await pool.getConnection();
@@ -475,15 +475,15 @@ router.put('/profile', authenticateToken, checkRole(['panitia']), async (req, re
 
     // Update profile
     await conn.execute(
-      'UPDATE users SET name = ?, email = ? WHERE id = ?',
-      [name, email, userId]
+      'UPDATE users SET email = ? WHERE id = ?',
+      [email, userId]
     );
 
     await conn.release();
 
     res.json({ 
       message: 'Profile berhasil diupdate',
-      user: { name, email }
+      user: { email }
     });
   } catch (error) {
     console.error('Error updating profile:', error);
