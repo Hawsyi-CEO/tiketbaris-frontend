@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import QRCode from 'qrcode';
 import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, ResponsiveGrid, MobileNavigation, StatsCard, NotificationToast } from '../../components/ResponsiveComponents';
+import InfoModal from '../../components/InfoModal';
 import socketService from '../../services/socket';
 import { API_URL, DOMAIN } from '../../config/api';
 
@@ -26,6 +27,7 @@ const DashboardUserResponsive = () => {
   const [notification, setNotification] = useState({ show: false, type: 'info', message: '' });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const qrCanvasRef = useRef(null);
+  const [infoModal, setInfoModal] = useState({ isOpen: false, type: 'about' });
   
   // Edit Profile & Password States
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -1390,6 +1392,70 @@ const DashboardUserResponsive = () => {
           message={notification.message}
           isVisible={notification.show}
           onClose={() => setNotification({ ...notification, show: false })}
+        />
+
+        {/* Footer - Only show on desktop, hide on mobile to avoid overlap with bottom nav */}
+        {!isMobile && (
+          <footer className="mt-12 py-8 bg-gray-50 border-t border-gray-200">
+            <div className="container mx-auto px-4">
+              <div className="text-center space-y-4">
+                <div className="flex flex-wrap justify-center gap-4 text-sm">
+                  <button
+                    onClick={() => setInfoModal({ isOpen: true, type: 'about' })}
+                    className="text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    Tentang Kami
+                  </button>
+                  <button
+                    onClick={() => setInfoModal({ isOpen: true, type: 'help' })}
+                    className="text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    Bantuan
+                  </button>
+                  <button
+                    onClick={() => setInfoModal({ isOpen: true, type: 'terms' })}
+                    className="text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    Syarat & Ketentuan
+                  </button>
+                  <button
+                    onClick={() => setInfoModal({ isOpen: true, type: 'privacy' })}
+                    className="text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    Kebijakan Privasi
+                  </button>
+                </div>
+
+                {/* Powered by SimpaSkor */}
+                <div className="pt-2">
+                  <p className="text-gray-500 text-xs mb-2">Powered by</p>
+                  <a 
+                    href="https://simpaskor.id" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-block hover:scale-105 transition-transform"
+                  >
+                    <img 
+                      src="/logo-simpaskor.png" 
+                      alt="SimpaSkor" 
+                      className="h-8 mx-auto opacity-70 hover:opacity-100 transition-opacity"
+                    />
+                  </a>
+                </div>
+
+                <div className="text-gray-500 text-xs">
+                  © 2026 Tiket Baris. All rights reserved.
+                </div>
+              </div>
+            </div>
+          </footer>
+        )}
+
+        {/* Info Modal */}
+        <InfoModal
+          isOpen={infoModal.isOpen}
+          type={infoModal.type}
+          onClose={() => setInfoModal({ ...infoModal, isOpen: false })}
         />
       </div>
     </ResponsiveLayout>

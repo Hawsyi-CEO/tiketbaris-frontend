@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { eventService } from '../services/apiServices';
 import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, ResponsiveGrid, NotificationToast } from '../components/ResponsiveComponents';
 import EventDetailModal from '../components/EventDetailModal';
+import InfoModal from '../components/InfoModal';
 import { DOMAIN } from '../config/api';
 
 export default function HomePage() {
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [notification, setNotification] = useState({ show: false, type: 'info', message: '' });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [infoModal, setInfoModal] = useState({ isOpen: false, type: 'about' });
 
   // Check auth status
   useEffect(() => {
@@ -171,12 +173,18 @@ export default function HomePage() {
         <nav className="glass-effect sticky top-0 z-50 border-b border-white border-opacity-20">
           <div className="container-responsive py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-bold gradient-text cursor-pointer" 
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <h1 className="text-xl sm:text-2xl font-bold gradient-text cursor-pointer" 
                     onClick={() => navigate('/')}>
                   🎫 Tiket Baris
                 </h1>
-                <span className="hidden sm:block text-gray-600">Platform Tiket Digital</span>
+                <div className="hidden sm:flex items-center gap-2">
+                  <span className="text-gray-400 text-xs">|</span>
+                  <span className="text-gray-600 text-sm">Powered by</span>
+                  <a href="https://simpaskor.id" target="_blank" rel="noopener noreferrer">
+                    <img src="/logo-simpaskor.png" alt="SimpaSkor" className="h-5 opacity-70 hover:opacity-100 transition-opacity" />
+                  </a>
+                </div>
               </div>
               
               <div className="flex items-center space-x-2 sm:space-x-4">
@@ -521,31 +529,70 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="bg-gray-900 text-white">
           <div className="container-responsive padding-responsive">
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-6">
               <div className="text-2xl font-bold gradient-text">🎫 Tiket Baris</div>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm sm:text-base">
                 Platform tiket digital terpercaya di Indonesia
               </p>
-              <div className="flex justify-center space-x-6 text-sm">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              
+              {/* Footer Links */}
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm">
+                <button
+                  onClick={() => setInfoModal({ isOpen: true, type: 'about' })}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
                   Tentang Kami
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                </button>
+                <button
+                  onClick={() => setInfoModal({ isOpen: true, type: 'help' })}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
                   Bantuan
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                </button>
+                <button
+                  onClick={() => setInfoModal({ isOpen: true, type: 'terms' })}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
                   Syarat & Ketentuan
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                </button>
+                <button
+                  onClick={() => setInfoModal({ isOpen: true, type: 'privacy' })}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
                   Kebijakan Privasi
+                </button>
+              </div>
+
+              {/* Powered by SimpaSkor */}
+              <div className="pt-4">
+                <p className="text-gray-500 text-xs mb-3">Powered by</p>
+                <a 
+                  href="https://simpaskor.id" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-block hover:scale-105 transition-transform"
+                >
+                  <img 
+                    src="/logo-simpaskor.png" 
+                    alt="SimpaSkor" 
+                    className="h-8 sm:h-10 mx-auto opacity-80 hover:opacity-100 transition-opacity"
+                  />
                 </a>
               </div>
-              <div className="pt-6 border-t border-gray-700 text-gray-500 text-sm">
-                © 2025 Tiket Baris. All rights reserved.
+
+              <div className="pt-4 border-t border-gray-700 text-gray-500 text-xs sm:text-sm">
+                © 2026 Tiket Baris. All rights reserved.
               </div>
             </div>
           </div>
         </footer>
+
+        {/* Info Modal */}
+        <InfoModal
+          isOpen={infoModal.isOpen}
+          type={infoModal.type}
+          onClose={() => setInfoModal({ ...infoModal, isOpen: false })}
+        />
 
         {/* Event Detail Modal */}
         {selectedEvent && (

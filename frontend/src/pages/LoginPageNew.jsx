@@ -234,6 +234,23 @@ export default function LoginPage() {
                 <div className="register-stat-label">Tiket Terjual</div>
               </div>
             </div>
+
+            {/* Powered by SimpaSkor */}
+            <div className="mt-8 pt-6 border-t border-white border-opacity-20 text-center">
+              <p className="text-white text-opacity-60 text-sm mb-3">Powered by</p>
+              <a 
+                href="https://simpaskor.id" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block hover:scale-105 transition-transform"
+              >
+                <img 
+                  src="/logo-simpaskor.png" 
+                  alt="SimpaSkor" 
+                  className="h-10 mx-auto opacity-80 hover:opacity-100 transition-opacity"
+                />
+              </a>
+            </div>
           </div>
         </div>
 
