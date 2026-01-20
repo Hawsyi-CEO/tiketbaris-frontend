@@ -29,7 +29,7 @@ const DashboardPanitiaResponsive = () => {
   
   // Edit Profile States
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [profileData, setProfileData] = useState({ name: '', email: '' });
+  const [profileData, setProfileData] = useState({ organizer_name: '', email: '' });
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   // Mobile navigation items
@@ -172,7 +172,7 @@ const DashboardPanitiaResponsive = () => {
 
   const handleOpenEditProfile = () => {
     setProfileData({ 
-      name: panitia?.name || '', 
+      organizer_name: panitia?.organizer_name || panitia?.username || '', 
       email: panitia?.email || '' 
     });
     setShowEditProfile(true);
@@ -188,7 +188,7 @@ const DashboardPanitiaResponsive = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setPanitia(prev => ({ ...prev, name: profileData.name, email: profileData.email }));
+      setPanitia(prev => ({ ...prev, organizer_name: profileData.organizer_name, email: profileData.email }));
       showNotification('success', 'Profile berhasil diupdate!');
       setShowEditProfile(false);
     } catch (error) {
@@ -1136,16 +1136,30 @@ const DashboardPanitiaResponsive = () => {
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nama Lengkap
+                    Username (untuk login)
                   </label>
                   <input
                     type="text"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    value={panitia?.username || ''}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed"
+                    placeholder="Username tidak dapat diubah"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nama Penyelenggara Event
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.organizer_name}
+                    onChange={(e) => setProfileData({ ...profileData, organizer_name: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Masukkan nama lengkap"
+                    placeholder="Masukkan nama penyelenggara"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">Nama ini akan ditampilkan di halaman event</p>
                 </div>
 
                 <div>

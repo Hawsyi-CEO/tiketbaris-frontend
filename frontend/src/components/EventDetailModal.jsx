@@ -10,7 +10,7 @@ export default function EventDetailModal({ event, onClose, onCheckout }) {
   const eventDate = new Date(event.date);
   const now = new Date();
   const isPastEvent = eventDate < now;
-  const isOutOfStock = event.stock <= 0;
+  const isSoldOut = event.status === 'sold_out' || event.stock <= 0;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -60,9 +60,9 @@ export default function EventDetailModal({ event, onClose, onCheckout }) {
               className="w-full h-full object-cover"
             />
             <div className={`absolute top-4 left-4 px-4 py-2 rounded-full font-semibold text-sm ${
-              isPastEvent ? 'bg-gray-600' : event.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'
+              isPastEvent ? 'bg-gray-600' : isSoldOut ? 'bg-red-600' : event.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'
             } text-white`}>
-              {isPastEvent ? '⏰ Event Telah Lewat' : event.status === 'active' ? '✅ Aktif' : '⏳ Pending'}
+              {isPastEvent ? '⏰ Event Telah Lewat' : isSoldOut ? '🚫 SOLD OUT' : event.status === 'active' ? '✅ Aktif' : '⏳ Pending'}
             </div>
           </div>
           <button 
@@ -157,25 +157,25 @@ export default function EventDetailModal({ event, onClose, onCheckout }) {
               <div className="pt-4 border-t">
                 <button 
                   className={`w-full px-6 py-4 rounded-xl font-bold text-lg transition-all ${
-                    isPastEvent || isOutOfStock
+                    isPastEvent || isSoldOut
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-lg hover:scale-105'
                   }`}
                   onClick={() => {
                     console.log('🔘 Button clicked!');
                     console.log('Event ID:', event.id);
-                    console.log('isPastEvent:', isPastEvent, 'isOutOfStock:', isOutOfStock);
-                    if (!isPastEvent && !isOutOfStock && onCheckout) {
+                    console.log('isPastEvent:', isPastEvent, 'isSoldOut:', isSoldOut);
+                    if (!isPastEvent && !isSoldOut && onCheckout) {
                       console.log('Calling onCheckout with event.id:', event.id);
                       onCheckout(event.id);
                       onClose();
                     } else {
-                      console.log('Button action blocked:', { isPastEvent, isOutOfStock, hasOnCheckout: !!onCheckout });
+                      console.log('Button action blocked:', { isPastEvent, isSoldOut, hasOnCheckout: !!onCheckout });
                     }
                   }}
-                  disabled={isPastEvent || isOutOfStock}
+                  disabled={isPastEvent || isSoldOut}
                 >
-                  {isPastEvent ? '⏰ Event Telah Lewat' : isOutOfStock ? '❌ Tiket Habis' : '🛒 Beli Tiket Sekarang'}
+                  {isPastEvent ? '⏰ Event Telah Lewat' : isSoldOut ? '🚫 SOLD OUT' : '🛒 Beli Tiket Sekarang'}
                 </button>
               </div>
             </div>

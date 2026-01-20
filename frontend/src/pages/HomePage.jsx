@@ -330,7 +330,7 @@ export default function HomePage() {
                   const eventDate = new Date(event.date);
                   const now = new Date();
                   const isPastEvent = eventDate < now;
-                  const isOutOfStock = event.stock <= 0;
+                  const isSoldOut = event.status === 'sold_out' || event.stock <= 0;
 
                   return (
                     <div
@@ -356,6 +356,10 @@ export default function HomePage() {
                           {isPastEvent ? (
                             <span className="bg-gray-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                               ⏰ Event Telah Lewat
+                            </span>
+                          ) : isSoldOut ? (
+                            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                              🚫 SOLD OUT
                             </span>
                           ) : (
                             <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -420,14 +424,14 @@ export default function HomePage() {
                               >
                                 ⏰ Telah Lewat
                               </InteractiveButton>
-                            ) : isOutOfStock ? (
+                            ) : isSoldOut ? (
                               <InteractiveButton
                                 variant="secondary"
                                 size="small"
                                 disabled
                                 className="opacity-50 cursor-not-allowed"
                               >
-                                🚫 Habis
+                                🚫 SOLD OUT
                               </InteractiveButton>
                             ) : (
                               <InteractiveButton

@@ -443,13 +443,13 @@ export const StatsCard = ({
   return (
     <div className={`stat-card ${clickable ? 'cursor-pointer hover:shadow-xl transition-all' : ''}`}>
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900">{value}</p>
           {trend && (
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1 sm:mt-2">
               <span className={`
-                text-sm font-medium
+                text-xs sm:text-sm font-medium
                 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}
               `}>
                 {trend === 'up' ? '↗' : '↘'} {trendValue}
@@ -457,12 +457,12 @@ export const StatsCard = ({
             </div>
           )}
           {clickable && (
-            <p className="text-xs text-gray-400 mt-1">👆 Klik untuk lihat detail</p>
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-1 hidden sm:block">👆 Klik untuk lihat detail</p>
           )}
         </div>
         <div className={`
-          w-12 h-12 rounded-xl bg-gradient-to-r ${colors[color]}
-          flex items-center justify-center text-white text-xl
+          w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r ${colors[color]}
+          flex items-center justify-center text-white text-lg sm:text-xl flex-shrink-0 ml-2
           ${clickable ? 'transform transition-transform group-hover:scale-110' : ''}
         `}>
           {icon}

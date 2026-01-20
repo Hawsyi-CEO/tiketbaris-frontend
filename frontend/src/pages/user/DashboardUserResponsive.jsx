@@ -356,22 +356,22 @@ const DashboardUserResponsive = () => {
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedEvent.title}</h2>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">{selectedEvent.title}</h2>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <span>👤</span>
                 <span>Diselenggarakan oleh: {selectedEvent.organizer || 'Panitia'}</span>
               </div>
             </div>
 
             {/* Event Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl">
-                <span className="text-2xl">📅</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-blue-50 rounded-xl">
+                <span className="text-xl sm:text-2xl">📅</span>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Tanggal</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">
                     {new Date(selectedEvent.date).toLocaleDateString('id-ID', {
                       weekday: 'long',
                       year: 'numeric',
@@ -382,29 +382,29 @@ const DashboardUserResponsive = () => {
                 </div>
               </div>
               
-              <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-xl">
-                <span className="text-2xl">📍</span>
+              <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-purple-50 rounded-xl">
+                <span className="text-xl sm:text-2xl">📍</span>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Lokasi</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedEvent.location}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2">{selectedEvent.location}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl">
-                <span className="text-2xl">💰</span>
+              <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-green-50 rounded-xl">
+                <span className="text-xl sm:text-2xl">💰</span>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Harga Tiket</p>
-                  <p className="text-xl font-bold text-green-600">
+                  <p className="text-lg sm:text-xl font-bold text-green-600">
                     Rp {selectedEvent.price.toLocaleString('id-ID')}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-xl">
-                <span className="text-2xl">🎫</span>
+              <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-yellow-50 rounded-xl">
+                <span className="text-xl sm:text-2xl">🎫</span>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Tiket Tersedia</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">
                     {selectedEvent.stock > 0 ? `${selectedEvent.stock} tiket` : 'Habis'}
                   </p>
                 </div>
@@ -413,19 +413,19 @@ const DashboardUserResponsive = () => {
 
             {/* Description */}
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">📝 Deskripsi Event</h3>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3">📝 Deskripsi Event</h3>
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                   {selectedEvent.description || 'Tidak ada deskripsi.'}
                 </p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
               <button
                 onClick={handleCloseEventModal}
-                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+                className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-200 transition-all"
               >
                 Tutup
               </button>
@@ -434,14 +434,14 @@ const DashboardUserResponsive = () => {
                   handleCloseEventModal();
                   handleEventClick(selectedEvent);
                 }}
-                disabled={new Date(selectedEvent.date) < new Date() || selectedEvent.stock <= 0}
-                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                  new Date(selectedEvent.date) >= new Date() && selectedEvent.stock > 0
+                disabled={new Date(selectedEvent.date) < new Date() || selectedEvent.status === 'sold_out' || selectedEvent.stock <= 0}
+                className={`flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base transition-all ${
+                  new Date(selectedEvent.date) >= new Date() && selectedEvent.status !== 'sold_out' && selectedEvent.stock > 0
                     ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white hover:shadow-lg hover:scale-105'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {new Date(selectedEvent.date) < new Date() ? '⏰ Event Telah Lewat' : selectedEvent.stock > 0 ? '🎫 Beli Tiket Sekarang' : '🚫 Tiket Habis'}
+                {new Date(selectedEvent.date) < new Date() ? '⏰ Event Telah Lewat' : (selectedEvent.status === 'sold_out' || selectedEvent.stock <= 0) ? '🚫 SOLD OUT' : '🎫 Beli Tiket'}
               </button>
             </div>
           </div>
@@ -581,15 +581,15 @@ const DashboardUserResponsive = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <ResponsiveCard className="text-center bg-gradient-to-r from-red-500 to-orange-600 text-white">
-        <div className="space-y-4">
-          <div className="w-20 h-20 rounded-full bg-white bg-opacity-20 mx-auto flex items-center justify-center text-3xl">
+        <div className="space-y-3">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white bg-opacity-20 mx-auto flex items-center justify-center text-2xl sm:text-3xl">
             👤
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
               Selamat Datang, {user?.name || 'User'}! 👋
             </h1>
-            <p className="text-blue-100 mt-2">
+            <p className="text-blue-100 mt-1 text-sm sm:text-base">
               Kelola tiket dan event favorit Anda dengan mudah
             </p>
           </div>
@@ -599,7 +599,7 @@ const DashboardUserResponsive = () => {
             <InteractiveButton
               variant="light"
               onClick={() => setActiveTab('tickets')}
-              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-8 py-3 text-lg shadow-lg"
+              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg shadow-lg"
             >
               🎟️ My Ticket
             </InteractiveButton>
@@ -679,8 +679,8 @@ const DashboardUserResponsive = () => {
 
       {/* Event Statistics - Tambahan */}
       <ResponsiveCard>
-        <h3 className="text-xl font-bold text-gray-900 mb-4">🎪 Statistik Event</h3>
-        <ResponsiveGrid cols={{ xs: 3, sm: 3, lg: 3 }}>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">🎪 Statistik Event</h3>
+        <ResponsiveGrid cols={{ xs: 1, sm: 3, lg: 3 }}>
           <div 
             onClick={() => {
               setActiveTab('events');
@@ -759,20 +759,20 @@ const DashboardUserResponsive = () => {
 
       {/* Recent Events */}
       <ResponsiveCard>
-        <h3 className="text-xl font-bold text-gray-900 mb-4">🔥 Event Terbaru</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">🔥 Event Terbaru</h3>
         <ResponsiveGrid cols={{ xs: 1, sm: 2, lg: 3 }}>
           {events.slice(0, 6).map((event) => {
             const eventDate = new Date(event.date);
             const now = new Date();
             const isPastEvent = eventDate < now;
-            const isOutOfStock = event.stock <= 0;
+            const isSoldOut = event.status === 'sold_out' || event.stock <= 0;
             
             return (
               <div
                 key={event.id}
-                className={`interactive-card bg-white rounded-xl p-4 border border-gray-100 ${isPastEvent ? 'opacity-75' : ''}`}
+                className={`interactive-card bg-white rounded-xl p-3 sm:p-4 border border-gray-100 ${isPastEvent ? 'opacity-75' : ''}`}
               >
-                <div className="aspect-video bg-gradient-to-r from-red-200 to-orange-200 rounded-lg mb-3 flex items-center justify-center overflow-hidden relative">
+                <div className="aspect-video bg-gradient-to-r from-red-200 to-orange-200 rounded-lg mb-2 sm:mb-3 flex items-center justify-center overflow-hidden relative">
                   {event.image_url ? (
                     <img
                       src={`${DOMAIN}${event.image_url}`}
@@ -780,22 +780,22 @@ const DashboardUserResponsive = () => {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML = '<span class="text-4xl">🎭</span>';
+                        e.target.parentElement.innerHTML = '<span class="text-3xl sm:text-4xl">🎭</span>';
                       }}
                     />
                   ) : (
-                    <span className="text-4xl">🎭</span>
+                    <span className="text-3xl sm:text-4xl">🎭</span>
                   )}
                   {isPastEvent && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <span className="bg-gray-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      <span className="bg-gray-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-semibold">
                         ⏰ Event Telah Lewat
                       </span>
                     </div>
                   )}
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-2">{event.title}</h4>
-                <div className="space-y-1 text-sm text-gray-600 mb-3">
+                <h4 className="font-semibold text-sm sm:text-base text-gray-900 mb-2 line-clamp-2">{event.title}</h4>
+                <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
                   <div className="flex items-center gap-2">
                     <span>📅</span>
                     <span>{new Date(event.date).toLocaleDateString('id-ID')}</span>
@@ -814,30 +814,30 @@ const DashboardUserResponsive = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleShowEventDetail(event)}
-                    className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-all"
+                    className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 text-gray-700 rounded-lg text-xs sm:text-sm font-semibold hover:bg-gray-200 transition-all"
                   >
-                    📄 Lihat Detail
+                    📄 Detail
                   </button>
                   {isPastEvent ? (
                     <button
                       disabled
-                      className="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-semibold cursor-not-allowed"
+                      className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-300 text-gray-500 rounded-lg text-xs sm:text-sm font-semibold cursor-not-allowed"
                     >
-                      ⏰ Telah Lewat
+                      ⏰ Lewat
                     </button>
-                  ) : isOutOfStock ? (
+                  ) : isSoldOut ? (
                     <button
                       disabled
-                      className="flex-1 px-3 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-semibold cursor-not-allowed"
+                      className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-300 text-gray-500 rounded-lg text-xs sm:text-sm font-semibold cursor-not-allowed"
                     >
-                      🚫 Habis
+                      🚫 SOLD OUT
                     </button>
                   ) : (
                     <button
                       onClick={() => handleEventClick(event)}
-                      className="flex-1 px-3 py-2 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                      className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-red-500 to-orange-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:shadow-lg transition-all"
                     >
-                      🎫 Beli Tiket
+                      🎫 Beli
                     </button>
                   )}
                 </div>
@@ -868,7 +868,7 @@ const DashboardUserResponsive = () => {
             const eventDate = new Date(event.date);
             const now = new Date();
             const isPastEvent = eventDate < now;
-            const isOutOfStock = event.stock <= 0;
+            const isSoldOut = event.status === 'sold_out' || event.stock <= 0;
             
             return (
               <div
@@ -903,9 +903,9 @@ const DashboardUserResponsive = () => {
                   )}
                 </div>
                 
-                <div className="p-6">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2">{event.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+                <div className="p-4 sm:p-6">
+                  <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{event.description}</p>
                   
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <div className="flex items-center gap-2">
@@ -923,7 +923,7 @@ const DashboardUserResponsive = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-green-600 mb-2">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600 mb-2">
                       Rp {event.price.toLocaleString('id-ID')}
                     </div>
                     <div className="flex gap-2">
@@ -940,12 +940,12 @@ const DashboardUserResponsive = () => {
                         >
                           ⏰ Telah Lewat
                         </button>
-                      ) : isOutOfStock ? (
+                      ) : isSoldOut ? (
                         <button
                           disabled
                           className="flex-1 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed"
                         >
-                          🚫 Habis
+                          🚫 SOLD OUT
                         </button>
                       ) : (
                         <button
@@ -978,8 +978,8 @@ const DashboardUserResponsive = () => {
   const renderTickets = () => (
     <div className="space-y-6">
       <ResponsiveCard>
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">🎟️ Tiket Saya</h2>
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">🎟️ Tiket Saya</h2>
           
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <ResponsiveInput
