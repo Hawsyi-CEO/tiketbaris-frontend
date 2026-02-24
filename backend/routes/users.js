@@ -192,4 +192,205 @@ router.get('/my-tickets', authenticateToken, async (req, res) => {
   }
 });
 
+// ========== PENDING TRANSACTIONS MANAGEMENT ==========
+
+// Get user's pending transactions (awaiting payment)
+router.get('/transactions/pending', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const conn = await pool.getConnection();
+
+    // Only get truly pending transactions (not cancelled, not completed, not expired)
+    const [transactions] = await conn.execute(
+      `SELECT 
+        t.id,
+        t.midtrans_order_id,
+        t.snap_token,
+        t.midtrans_transaction_id,
+        t.payment_type,
+        t.va_number,
+        t.bank_name,
+        t.payment_code,
+        t.bill_key,
+        t.biller_code,
+        t.event_id,
+        e.title as event_name,
+        e.image_url as event_image,
+        t.quantity,
+        t.total_amount,
+        t.status,
+        t.transaction_date,
+        t.expired_at,
+        CASE 
+          WHEN t.expired_at IS NULL THEN 86400
+          ELSE TIMESTAMPDIFF(SECOND, NOW(), t.expired_at)
+        END as seconds_remaining
+       FROM transactions t
+       JOIN events e ON t.event_id = e.id
+       WHERE t.user_id = ? 
+         AND t.status = 'pending'
+         AND t.status != 'cancelled'
+         AND t.status != 'completed'
+         AND (t.expired_at IS NULL OR t.expired_at > NOW())
+       ORDER BY t.transaction_date DESC`,
+      [userId]
+    );
+
+    await conn.release();
+    res.json({ success: true, transactions });
+  } catch (error) {
+    console.error('Get pending transactions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Snap token for re-opening payment (for pending transactions)
+router.get('/transactions/:id/snap-token', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const conn = await pool.getConnection();
+
+    const [transactions] = await conn.execute(
+      `SELECT id, midtrans_order_id, snap_token, status, expired_at, user_id
+       FROM transactions
+       WHERE id = ? AND user_id = ?`,
+      [id, userId]
+    );
+
+    if (transactions.length === 0) {
+      await conn.release();
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const transaction = transactions[0];
+
+    // Check if still pending and not expired
+    if (transaction.status !== 'pending') {
+      await conn.release();
+      return res.status(400).json({ error: 'Transaction is not pending' });
+    }
+
+    if (new Date(transaction.expired_at) < new Date()) {
+      // Auto-expire if expired
+      await conn.execute(
+        'UPDATE transactions SET status = ? WHERE id = ?',
+        ['expired', id]
+      );
+      await conn.release();
+      return res.status(400).json({ error: 'Transaction has expired' });
+    }
+
+    await conn.release();
+    res.json({ 
+      success: true, 
+      snap_token: transaction.snap_token,
+      order_id: transaction.midtrans_order_id
+    });
+  } catch (error) {
+    console.error('Get snap token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cancel pending transaction
+router.post('/transactions/:id/cancel', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const conn = await pool.getConnection();
+
+    // Check ownership and status
+    const [transactions] = await conn.execute(
+      'SELECT id, status FROM transactions WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (transactions.length === 0) {
+      await conn.release();
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    if (transactions[0].status !== 'pending') {
+      await conn.release();
+      return res.status(400).json({ error: 'Only pending transactions can be cancelled' });
+    }
+
+    // Update status to cancelled
+    await conn.execute(
+      'UPDATE transactions SET status = ? WHERE id = ?',
+      ['cancelled', id]
+    );
+
+    await conn.release();
+    res.json({ 
+      success: true, 
+      message: 'Transaction cancelled successfully' 
+    });
+  } catch (error) {
+    console.error('Cancel transaction error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's transaction history (all statuses)
+router.get('/transactions/history', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status } = req.query;
+    const conn = await pool.getConnection();
+
+    let query = `
+      SELECT 
+        t.id,
+        t.midtrans_order_id,
+        t.snap_token,
+        t.midtrans_transaction_id,
+        t.payment_type,
+        t.va_number,
+        t.bank_name,
+        t.payment_code,
+        t.bill_key,
+        t.biller_code,
+        t.event_id,
+        e.title as event_name,
+        e.image_url as event_image,
+        t.quantity,
+        t.total_amount,
+        t.status,
+        t.transaction_date,
+        t.expired_at,
+        TIMESTAMPDIFF(SECOND, NOW(), t.expired_at) as seconds_remaining,
+        COUNT(tk.id) as tickets_count,
+        SUM(CASE WHEN tk.status = 'active' THEN 1 ELSE 0 END) as active_tickets,
+        SUM(CASE WHEN tk.status = 'scanned' THEN 1 ELSE 0 END) as scanned_tickets
+      FROM transactions t
+      JOIN events e ON t.event_id = e.id
+      LEFT JOIN tickets tk ON tk.transaction_id = t.id
+      WHERE t.user_id = ?
+    `;
+
+    const params = [userId];
+
+    if (status && status !== 'all') {
+      query += ' AND t.status = ?';
+      params.push(status);
+    }
+
+    query += ` GROUP BY t.id, t.midtrans_order_id, t.snap_token, t.midtrans_transaction_id, 
+               t.payment_type, t.va_number, t.bank_name, t.payment_code, t.bill_key, t.biller_code,
+               t.event_id, e.title, e.image_url, t.quantity, t.total_amount, t.status, 
+               t.transaction_date, t.expired_at
+               ORDER BY t.transaction_date DESC`;
+
+    const [transactions] = await conn.query(query, params);
+
+    await conn.release();
+    res.json({ success: true, transactions });
+  } catch (error) {
+    console.error('Get transaction history error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

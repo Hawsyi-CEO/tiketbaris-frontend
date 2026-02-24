@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, ResponsiveGrid, MobileNavigation, StatsCard, NotificationToast, ResponsiveTable } from '../../components/ResponsiveComponents';
 import { API_URL } from '../../config/api';
+import { formatRupiah } from '../../utils/formatRupiah';
 
 const DashboardAdminResponsive = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const DashboardAdminResponsive = () => {
     { key: 'dashboard', label: 'Dashboard', icon: '📊' },
     { key: 'events', label: 'Events', icon: '🎭' },
     { key: 'users', label: 'Users', icon: '👥' },
+    { key: 'transactions', label: 'Transaksi', icon: '💳' },
     { key: 'analytics', label: 'Analytics', icon: '📈' },
     { key: 'settings', label: 'Settings', icon: '⚙️' }
   ];
@@ -105,7 +107,20 @@ const DashboardAdminResponsive = () => {
       const response = await axios.get(`${API_URL}/admin/analytics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Analytics data received:', response.data);
+      console.log('Daily transactions:', response.data.dailyTransactions);
       setAnalytics(response.data || {});
+      
+      // Fetch payment method statistics
+      const paymentResponse = await axios.get(`${API_URL}/admin/analytics/payment-methods`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Payment methods data:', paymentResponse.data);
+      setAnalytics(prev => ({
+        ...prev,
+        paymentMethods: paymentResponse.data.paymentMethods || [],
+        paymentTypeSummary: paymentResponse.data.paymentTypeSummary || []
+      }));
     } catch (error) {
       console.error('Error fetching analytics:', error);
     }
@@ -227,7 +242,8 @@ const DashboardAdminResponsive = () => {
   const totalEvents = events.length;
   const activeEvents = events.filter(e => e.status === 'active').length;
   const totalUsers = users.length;
-  const totalRevenue = tickets.reduce((sum, ticket) => sum + (ticket.amount || 0), 0);
+  // Get revenue from analytics API, not from tickets
+  const totalRevenue = analytics.totalRevenue || 0;
 
   // Render Dashboard Tab
   const renderDashboard = () => (
@@ -275,7 +291,7 @@ const DashboardAdminResponsive = () => {
         />
         <StatsCard
           title="Total Revenue"
-          value={`Rp ${totalRevenue.toLocaleString('id-ID')}`}
+          value={`Rp ${formatRupiah(totalRevenue)}`}
           icon="💰"
           color="yellow"
           trend="up"
@@ -293,6 +309,13 @@ const DashboardAdminResponsive = () => {
             onClick={() => navigate('/admin/scanner')}
           >
             📱 Scanner Tiket
+          </InteractiveButton>
+          <InteractiveButton
+            variant="secondary"
+            fullWidth
+            onClick={() => navigate('/admin/transactions')}
+          >
+            💳 Kelola Transaksi
           </InteractiveButton>
           <InteractiveButton
             variant="secondary"
@@ -324,6 +347,166 @@ const DashboardAdminResponsive = () => {
           </InteractiveButton>
         </ResponsiveGrid>
       </ResponsiveCard>
+
+      {/* Revenue & Analytics Charts */}
+      <ResponsiveGrid cols={{ xs: 1, sm: 1, lg: 2 }}>
+        {/* Daily Transactions Chart (30 days) */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">📈 Transaksi Harian (30 Hari Terakhir)</h3>
+          <div className="space-y-2">
+            {analytics.dailyTransactions && analytics.dailyTransactions.length > 0 ? (
+              <>
+                {analytics.dailyTransactions.slice(0, 10).reverse().map((item, index) => {
+                  const maxTransactions = Math.max(...analytics.dailyTransactions.map(d => d.total_transactions || 0));
+                  const percentage = maxTransactions > 0 ? ((item.total_transactions || 0) / maxTransactions) * 100 : 0;
+                  const dateLabel = new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                  
+                  return (
+                    <div key={index} className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{dateLabel}</span>
+                        <div className="flex gap-2 text-xs">
+                          <span className="text-green-600">✓ {item.completed || 0}</span>
+                          <span className="text-yellow-600">⏳ {item.pending || 0}</span>
+                          <span className="text-red-600">✕ {item.cancelled || 0}</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 h-2.5 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                        <span>{item.total_transactions || 0} transaksi</span>
+                        <span className="font-semibold text-green-600">Rp {formatRupiah(item.daily_revenue || 0)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">📈</div>
+                <p>Belum ada data transaksi</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+
+        {/* Monthly Revenue Chart */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Revenue 6 Bulan Terakhir</h3>
+          <div className="space-y-3">
+            {analytics.monthlyRevenue && analytics.monthlyRevenue.length > 0 ? (
+              <>
+                {analytics.monthlyRevenue.slice(0, 6).reverse().map((item, index) => {
+                  const maxRevenue = Math.max(...analytics.monthlyRevenue.map(m => m.revenue || 0));
+                  const percentage = maxRevenue > 0 ? ((item.revenue || 0) / maxRevenue) * 100 : 0;
+                  const monthName = new Date(item.month + '-01').toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{monthName}</span>
+                        <span className="text-sm font-bold text-blue-600">
+                          Rp {formatRupiah(item.revenue || 0)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {item.transactions || 0} transaksi
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">📊</div>
+                <p>Belum ada data revenue</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+      </ResponsiveGrid>
+
+      <ResponsiveGrid cols={{ xs: 1, sm: 1, lg: 2 }}>
+        {/* Top Events */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">🏆 Top Event (Revenue)</h3>
+          <div className="space-y-3">
+            {analytics.topEvents && analytics.topEvents.length > 0 ? (
+              analytics.topEvents.map((event, index) => (
+                <div key={event.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 truncate">{event.title}</div>
+                    <div className="text-sm text-gray-600">
+                      {event.tickets_sold || 0} tiket terjual
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">
+                      Rp {formatRupiah(event.revenue || 0)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">🎭</div>
+                <p>Belum ada event</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+
+        {/* User Growth Chart */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">👥 Pertumbuhan User (6 Bulan)</h3>
+          <div className="space-y-3">
+            {analytics.userGrowth && analytics.userGrowth.length > 0 ? (
+              <>
+                {analytics.userGrowth.slice(0, 6).reverse().map((item, index) => {
+                  const maxUsers = Math.max(...analytics.userGrowth.map(u => u.new_users || 0));
+                  const percentage = maxUsers > 0 ? ((item.new_users || 0) / maxUsers) * 100 : 0;
+                  const monthName = new Date(item.month + '-01').toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{monthName}</span>
+                        <span className="text-sm font-bold text-purple-600">
+                          +{item.new_users || 0} user
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">👥</div>
+                <p>Belum ada data user</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+      </ResponsiveGrid>
 
       {/* Recent Events */}
       <ResponsiveCard>
@@ -436,7 +619,7 @@ const DashboardAdminResponsive = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span>💰</span>
-                    <span>Rp {event.price.toLocaleString('id-ID')}</span>
+                    <span>Rp {formatRupiah(event.price)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span>🎫</span>
@@ -570,17 +753,6 @@ const DashboardAdminResponsive = () => {
       <ResponsiveCard>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">📈 Analytics</h2>
         
-        {/* Revenue Chart Placeholder */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-8 rounded-xl mb-6">
-          <h3 className="text-lg font-semibold mb-4">💰 Revenue Overview</h3>
-          <div className="h-64 bg-white rounded-lg flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <div className="text-4xl mb-2">📊</div>
-              <p>Chart akan ditampilkan di sini</p>
-            </div>
-          </div>
-        </div>
-
         {/* Quick Stats */}
         <ResponsiveGrid cols={{ xs: 2, sm: 2, lg: 4 }}>
           <div className="bg-white p-4 rounded-xl border border-gray-100 text-center">
@@ -591,7 +763,7 @@ const DashboardAdminResponsive = () => {
           <div className="bg-white p-4 rounded-xl border border-gray-100 text-center">
             <div className="text-2xl mb-2">💰</div>
             <div className="text-2xl font-bold text-green-600">
-              Rp {totalRevenue.toLocaleString('id-ID')}
+              Rp {formatRupiah(totalRevenue)}
             </div>
             <div className="text-sm text-gray-600">Total Revenue</div>
           </div>
@@ -606,6 +778,260 @@ const DashboardAdminResponsive = () => {
             <div className="text-sm text-gray-600">Rating Rata-rata</div>
           </div>
         </ResponsiveGrid>
+      </ResponsiveCard>
+
+      {/* Charts Section */}
+      <ResponsiveGrid cols={{ xs: 1, sm: 1, lg: 2 }}>
+        {/* Daily Transactions Chart */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">📈 Transaksi Harian (30 Hari Terakhir)</h3>
+          <div className="space-y-2">
+            {analytics.dailyTransactions && analytics.dailyTransactions.length > 0 ? (
+              <>
+                {analytics.dailyTransactions.slice(0, 10).reverse().map((item, index) => {
+                  const maxTransactions = Math.max(...analytics.dailyTransactions.map(d => d.total_transactions || 0));
+                  const percentage = maxTransactions > 0 ? ((item.total_transactions || 0) / maxTransactions) * 100 : 0;
+                  const dateLabel = new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                  
+                  return (
+                    <div key={index} className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{dateLabel}</span>
+                        <div className="flex gap-2 text-xs">
+                          <span className="text-green-600">✓ {item.completed || 0}</span>
+                          <span className="text-yellow-600">⏳ {item.pending || 0}</span>
+                          <span className="text-red-600">✕ {item.cancelled || 0}</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 h-2.5 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                        <span>{item.total_transactions || 0} transaksi</span>
+                        <span className="font-semibold text-green-600">Rp {formatRupiah(item.daily_revenue || 0)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">📈</div>
+                <p>Belum ada data transaksi</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+
+        {/* Monthly Revenue Chart */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Revenue 6 Bulan Terakhir</h3>
+          <div className="space-y-3">
+            {analytics.monthlyRevenue && analytics.monthlyRevenue.length > 0 ? (
+              <>
+                {analytics.monthlyRevenue.slice(0, 6).reverse().map((item, index) => {
+                  const maxRevenue = Math.max(...analytics.monthlyRevenue.map(m => m.revenue || 0));
+                  const percentage = maxRevenue > 0 ? ((item.revenue || 0) / maxRevenue) * 100 : 0;
+                  const monthName = new Date(item.month + '-01').toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{monthName}</span>
+                        <span className="text-sm font-bold text-blue-600">
+                          Rp {formatRupiah(item.revenue || 0)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {item.transactions || 0} transaksi
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">📊</div>
+                <p>Belum ada data revenue</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+      </ResponsiveGrid>
+
+      <ResponsiveGrid cols={{ xs: 1, sm: 1, lg: 2 }}>
+        {/* Top Events */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">🏆 Top Event (Revenue)</h3>
+          <div className="space-y-3">
+            {analytics.topEvents && analytics.topEvents.length > 0 ? (
+              analytics.topEvents.map((event, index) => (
+                <div key={event.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 truncate">{event.title}</div>
+                    <div className="text-sm text-gray-600">
+                      {event.tickets_sold || 0} tiket terjual
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">
+                      Rp {formatRupiah(event.revenue || 0)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">🎭</div>
+                <p>Belum ada event</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+
+        {/* User Growth Chart */}
+        <ResponsiveCard>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">👥 Pertumbuhan User (6 Bulan)</h3>
+          <div className="space-y-3">
+            {analytics.userGrowth && analytics.userGrowth.length > 0 ? (
+              <>
+                {analytics.userGrowth.slice(0, 6).reverse().map((item, index) => {
+                  const maxUsers = Math.max(...analytics.userGrowth.map(u => u.new_users || 0));
+                  const percentage = maxUsers > 0 ? ((item.new_users || 0) / maxUsers) * 100 : 0;
+                  const monthName = new Date(item.month + '-01').toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700">{monthName}</span>
+                        <span className="text-sm font-bold text-purple-600">
+                          +{item.new_users || 0} user
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-4xl mb-2">👥</div>
+                <p>Belum ada data user</p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
+      </ResponsiveGrid>
+
+      {/* Payment Method Statistics - Full Width */}
+      <ResponsiveCard>
+        <h3 className="text-xl font-bold text-gray-900 mb-4">💳 Metode Pembayaran Terpopuler</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {analytics.paymentMethods && analytics.paymentMethods.length > 0 ? (
+            analytics.paymentMethods.slice(0, 6).map((method, index) => {
+              // Map payment types to icons and colors
+              const getPaymentIcon = (type) => {
+                const typeUpper = (type || '').toUpperCase();
+                if (typeUpper === 'BANK_TRANSFER') return '🏦';
+                if (typeUpper === 'ECHANNEL') return '🏦';
+                if (typeUpper === 'GOPAY') return '💚';
+                if (typeUpper === 'SHOPEEPAY') return '🧡';
+                if (typeUpper === 'QRIS') return '📱';
+                if (typeUpper === 'CSTORE') return '🏪';
+                if (typeUpper === 'CREDIT_CARD') return '💳';
+                return '💳';
+              };
+
+              const getPaymentColor = (type) => {
+                const typeUpper = (type || '').toUpperCase();
+                if (typeUpper === 'BANK_TRANSFER') return 'from-blue-500 to-blue-600';
+                if (typeUpper === 'ECHANNEL') return 'from-blue-500 to-blue-600';
+                if (typeUpper === 'GOPAY') return 'from-green-500 to-green-600';
+                if (typeUpper === 'SHOPEEPAY') return 'from-orange-500 to-orange-600';
+                if (typeUpper === 'QRIS') return 'from-purple-500 to-purple-600';
+                if (typeUpper === 'CSTORE') return 'from-yellow-500 to-yellow-600';
+                if (typeUpper === 'CREDIT_CARD') return 'from-indigo-500 to-indigo-600';
+                return 'from-gray-500 to-gray-600';
+              };
+
+              const getPaymentName = (type, bank) => {
+                const typeUpper = (type || '').toUpperCase();
+                if (typeUpper === 'BANK_TRANSFER') {
+                  return bank ? `${bank} VA` : 'Bank Transfer';
+                }
+                if (typeUpper === 'ECHANNEL') return 'Mandiri Bill';
+                if (typeUpper === 'GOPAY') return 'GoPay';
+                if (typeUpper === 'SHOPEEPAY') return 'ShopeePay';
+                if (typeUpper === 'QRIS') return 'QRIS';
+                if (typeUpper === 'CSTORE') return bank || 'Convenience Store';
+                if (typeUpper === 'CREDIT_CARD') return 'Credit Card';
+                return type;
+              };
+
+              const icon = getPaymentIcon(method.payment_type);
+              const color = getPaymentColor(method.payment_type);
+              const name = getPaymentName(method.payment_type, method.bank_name);
+              const totalTransactions = analytics.paymentMethods.reduce((sum, m) => sum + (m.transaction_count || 0), 0);
+              const percentage = totalTransactions > 0 ? ((method.transaction_count || 0) / totalTransactions * 100).toFixed(1) : 0;
+
+              return (
+                <div key={index} className="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-white text-xl shadow-md`}>
+                      {icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-gray-900 truncate">{name}</div>
+                      <div className="text-xs text-gray-500">{percentage}% dari total</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Transaksi:</span>
+                      <span className="font-semibold text-gray-900">{method.transaction_count || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Selesai:</span>
+                      <span className="font-semibold text-green-600">{method.completed_count || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Revenue:</span>
+                      <span className="font-semibold text-blue-600">Rp {formatRupiah(method.total_revenue || 0)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className={`bg-gradient-to-r ${color} h-2 rounded-full transition-all duration-500`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">💳</div>
+              <p>Belum ada data metode pembayaran</p>
+            </div>
+          )}
+        </div>
       </ResponsiveCard>
     </div>
   );
@@ -782,6 +1208,7 @@ const DashboardAdminResponsive = () => {
                   { key: 'dashboard', label: '📊 Dashboard' },
                   { key: 'events', label: '🎭 Events' },
                   { key: 'users', label: '👥 Users' },
+                  { key: 'transactions', label: '💳 Transaksi' },
                   { key: 'analytics', label: '📈 Analytics' },
                   { key: 'settings', label: '⚙️ Settings' }
                 ].map((tab) => (
@@ -802,6 +1229,23 @@ const DashboardAdminResponsive = () => {
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'events' && renderEvents()}
             {activeTab === 'users' && renderUsers()}
+            {activeTab === 'transactions' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">💳 Transaction Management</h2>
+                  <InteractiveButton 
+                    variant="primary" 
+                    onClick={() => navigate('/admin/transactions')}
+                  >
+                    Buka Halaman Lengkap →
+                  </InteractiveButton>
+                </div>
+                <p className="text-gray-600">
+                  Kelola dan monitor semua transaksi pembelian tiket di halaman khusus dengan fitur lengkap:
+                  filter, search, update status manual, dan view QR codes.
+                </p>
+              </div>
+            )}
             {activeTab === 'analytics' && renderAnalytics()}
             {activeTab === 'settings' && renderSettings()}
           </div>

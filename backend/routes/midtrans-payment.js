@@ -3,6 +3,7 @@ const midtransClient = require('midtrans-client');
 const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const { emitToUser } = require('../socket-server');
+const PricingService = require('../services/pricingService');
 
 const router = express.Router();
 
@@ -130,9 +131,9 @@ router.post('/create-snap-token', authenticateToken, async (req, res) => {
     console.log('[MIDTRANS] Transaction parameter created');
     console.log('[MIDTRANS] Creating database transaction record...');
 
-    // Create transaction record (pending)
+    // Create transaction record (pending) with 24 hour expiration
     const [transResult] = await conn.execute(
-      'INSERT INTO transactions (midtrans_order_id, user_id, event_id, quantity, unit_price, total_amount, final_amount, status, payment_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO transactions (midtrans_order_id, user_id, event_id, quantity, unit_price, total_amount, final_amount, status, payment_type, expired_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))',
       [orderId, userId, eventId, quantity, event.price, totalPrice, totalPrice, 'pending', 'midtrans_snap']
     );
 
@@ -186,6 +187,25 @@ router.post('/notification', async (req, res) => {
       fraud_status: notification.fraud_status
     });
 
+    // LOG WEBHOOK DULU - untuk tracking dan debugging
+    try {
+      await pool.execute(
+        `INSERT INTO webhook_logs (order_id, transaction_status, payment_type, gross_amount, payload) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          notification.order_id,
+          notification.transaction_status,
+          notification.payment_type || 'unknown',
+          notification.gross_amount || 0,
+          JSON.stringify(notification)
+        ]
+      );
+      console.log('[WEBHOOK LOG] Logged notification for', notification.order_id);
+    } catch (logErr) {
+      // Logging gagal tidak boleh stop payment processing
+      console.error('[WEBHOOK LOG] Failed to log:', logErr.message);
+    }
+
     // Verify notification authenticity
     const statusResponse = await coreApi.transaction.notification(notification);
     
@@ -229,13 +249,60 @@ router.post('/notification', async (req, res) => {
         newStatus = 'cancelled';
       }
 
-      // Update transaction status
-      await conn.execute(
-        'UPDATE transactions SET status = ? WHERE midtrans_order_id = ?',
-        [newStatus, orderId]
-      );
+      // Extract payment info from Midtrans notification
+      const paymentType = statusResponse.payment_type;
+      const midtransTransactionId = statusResponse.transaction_id;
+      let vaNumber = null;
+      let bankName = null;
+      let paymentCode = null;
+      let billKey = null;
+      let billerCode = null;
+      
+      // Extract VA number for bank transfer
+      if (paymentType === 'bank_transfer') {
+        // Permata uses permata_va_number directly
+        if (statusResponse.permata_va_number) {
+          vaNumber = statusResponse.permata_va_number;
+          bankName = 'PERMATA';
+        }
+        // Other banks use va_numbers array
+        else if (statusResponse.va_numbers && statusResponse.va_numbers.length > 0) {
+          vaNumber = statusResponse.va_numbers[0].va_number;
+          bankName = statusResponse.va_numbers[0].bank.toUpperCase();
+        }
+      }
+      
+      // Extract payment code for convenience store
+      if (paymentType === 'cstore' && statusResponse.payment_code) {
+        paymentCode = statusResponse.payment_code;
+        bankName = statusResponse.store || 'Indomaret/Alfamart';
+      }
+      
+      // Extract bill key for Mandiri Bill
+      if (statusResponse.bill_key && statusResponse.biller_code) {
+        billKey = statusResponse.bill_key;
+        billerCode = statusResponse.biller_code;
+        bankName = 'Mandiri';
+      }
 
-      // If payment successful, create tickets and update stock
+      // Update transaction status and payment info
+      await conn.execute(
+        `UPDATE transactions 
+         SET status = ?, 
+             midtrans_transaction_id = ?,
+             payment_type = ?,
+             va_number = ?,
+             bank_name = ?,
+             payment_code = ?,
+             bill_key = ?,
+             biller_code = ?
+         WHERE midtrans_order_id = ?`,
+        [newStatus, midtransTransactionId, paymentType, vaNumber, bankName, paymentCode, billKey, billerCode, orderId]
+      );
+      
+      console.log(`[MIDTRANS] Saved payment info: ${bankName} VA: ${vaNumber}, Payment Code: ${paymentCode}`);
+
+      // If payment successful, calculate fees and create tickets
       if (newStatus === 'completed') {
         // Get event details for stock update
         const [events] = await conn.execute(
@@ -246,6 +313,71 @@ router.post('/notification', async (req, res) => {
         if (events.length > 0) {
           // Use quantity from transaction
           const quantity = transaction.quantity || 1;
+          
+          // === CALCULATE FEES ===
+          // Determine payment method dari Midtrans payment_type
+          let paymentMethod = 'gopay'; // default
+          if (paymentType === 'bank_transfer') paymentMethod = 'bank';
+          else if (paymentType === 'echannel' || paymentType === 'mandiri_clickpay') paymentMethod = 'bank';
+          else if (paymentType === 'credit_card') paymentMethod = 'cc';
+          else if (paymentType === 'cstore') paymentMethod = 'minimarket';
+          else if (paymentType === 'gopay') paymentMethod = 'gopay';
+          else if (paymentType === 'shopeepay') paymentMethod = 'shopeepay';
+          
+          // Calculate fees untuk transaction
+          const feeCalculation = PricingService.calculateFees(transaction.total_amount, paymentMethod);
+          
+          console.log(`[PRICING] Fee calculation:`, {
+            orderId,
+            gross: transaction.total_amount,
+            method: paymentMethod,
+            midtransFee: feeCalculation.midtransFee,
+            platformFee: feeCalculation.platformFee,
+            totalFee: feeCalculation.totalFee,
+            netAmount: feeCalculation.netAmount
+          });
+          
+          // Update transaction dengan fee information
+          await conn.execute(
+            `UPDATE transactions 
+             SET payment_method = ?,
+                 midtrans_fee_amount = ?,
+                 platform_fee_amount = ?,
+                 total_fee_amount = ?,
+                 net_amount_to_organizer = ?,
+                 fee_breakdown = ?
+             WHERE midtrans_order_id = ?`,
+            [
+              paymentMethod,
+              feeCalculation.midtransFee,
+              feeCalculation.platformFee,
+              feeCalculation.totalFee,
+              feeCalculation.netAmount,
+              JSON.stringify(feeCalculation.breakdown),
+              orderId
+            ]
+          );
+          
+          // Optional: Log to audit table untuk tracking
+          try {
+            await conn.execute(
+              `INSERT INTO transactions_fee_audit 
+               (transaction_id, gross_amount, payment_method, midtrans_fee, platform_fee, total_fee, net_amount)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                transaction.id,
+                transaction.total_amount,
+                paymentMethod,
+                feeCalculation.midtransFee,
+                feeCalculation.platformFee,
+                feeCalculation.totalFee,
+                feeCalculation.netAmount
+              ]
+            );
+            console.log(`[PRICING] Fee audit logged for transaction ${orderId}`);
+          } catch (auditErr) {
+            console.log('[PRICING] Audit table not ready yet (OK):', auditErr.message);
+          }
           
           // Update stock
           await conn.execute(
@@ -290,6 +422,17 @@ router.post('/notification', async (req, res) => {
       }
 
       await conn.commit();
+      
+      // Update webhook log: processed = TRUE
+      try {
+        await pool.execute(
+          'UPDATE webhook_logs SET processed = 1 WHERE order_id = ? ORDER BY created_at DESC LIMIT 1',
+          [orderId]
+        );
+      } catch (logErr) {
+        console.error('[WEBHOOK LOG] Failed to update processed status:', logErr.message);
+      }
+      
       await conn.release();
 
       res.status(200).json({ status: 'ok', message: 'Notification processed successfully' });
@@ -302,6 +445,17 @@ router.post('/notification', async (req, res) => {
 
   } catch (error) {
     console.error('[MIDTRANS] Notification error:', error);
+    
+    // Log error ke webhook_logs
+    try {
+      await pool.execute(
+        'UPDATE webhook_logs SET error_message = ? WHERE order_id = ? AND processed = 0 ORDER BY created_at DESC LIMIT 1',
+        [error.message, req.body.order_id]
+      );
+    } catch (logErr) {
+      console.error('[WEBHOOK LOG] Failed to log error:', logErr.message);
+    }
+    
     res.status(500).json({ 
       error: 'Failed to process notification',
       details: error.message 

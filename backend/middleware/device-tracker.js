@@ -1,41 +1,43 @@
 const db = require('../config/database');
 const crypto = require('crypto');
+const UAParser = require('ua-parser-js');
 
-// Parse User Agent to extract device info
+// Parse User Agent to extract device info (Enhanced version)
 const parseUserAgent = (userAgent) => {
-  const ua = userAgent || '';
-  
-  // Detect Browser
-  let browser = 'Unknown';
-  if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
-  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
-  else if (ua.includes('Firefox')) browser = 'Firefox';
-  else if (ua.includes('Edg')) browser = 'Edge';
-  else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
-  
-  // Detect OS
-  let os = 'Unknown';
-  if (ua.includes('Windows NT 10.0')) os = 'Windows 10';
-  else if (ua.includes('Windows NT 6.3')) os = 'Windows 8.1';
-  else if (ua.includes('Windows NT 6.2')) os = 'Windows 8';
-  else if (ua.includes('Windows NT 6.1')) os = 'Windows 7';
-  else if (ua.includes('Mac OS X')) os = 'macOS';
-  else if (ua.includes('Android')) os = 'Android';
-  else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
-  else if (ua.includes('Linux')) os = 'Linux';
-  
-  // Detect Device Type
-  let deviceType = 'desktop';
-  if (ua.includes('Mobile') || ua.includes('Android') || ua.includes('iPhone')) {
-    deviceType = 'mobile';
-  } else if (ua.includes('Tablet') || ua.includes('iPad')) {
-    deviceType = 'tablet';
+  if (!userAgent) {
+    return {
+      browser: 'Unknown',
+      os: 'Unknown',
+      deviceType: 'desktop',
+      deviceName: 'Unknown Device'
+    };
   }
-  
-  // Generate Device Name
-  const deviceName = `${os} - ${browser}`;
-  
-  return { browser, os, deviceType, deviceName };
+
+  const parser = new UAParser(userAgent);
+  const result = parser.getResult();
+
+  // Get browser info
+  const browser = result.browser.name || 'Unknown';
+  const browserVersion = result.browser.version ? ` ${result.browser.version.split('.')[0]}` : '';
+
+  // Get OS info
+  const os = result.os.name || 'Unknown';
+  const osVersion = result.os.version ? ` ${result.os.version}` : '';
+
+  // Determine device type
+  let deviceType = 'desktop';
+  if (result.device.type === 'mobile') deviceType = 'mobile';
+  else if (result.device.type === 'tablet') deviceType = 'tablet';
+
+  // Create device name
+  const deviceName = `${os}${osVersion} - ${browser}${browserVersion}`;
+
+  return {
+    browser: `${browser}${browserVersion}`,
+    os: `${os}${osVersion}`,
+    deviceType,
+    deviceName
+  };
 };
 
 // Create or update session when user logs in
@@ -99,24 +101,78 @@ const updateSessionActivity = async (sessionToken) => {
 };
 
 // Get all active sessions for a user
-const getUserSessions = async (userId) => {
+const getUserSessions = async (userId, currentToken = null) => {
   try {
     const [sessions] = await db.query(
       `SELECT 
         id, device_name, device_type, browser, os, 
         ip_address, last_active, created_at, is_current,
+        session_token,
         CASE 
           WHEN last_active > DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 'active'
           WHEN last_active > DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 'recent'
           ELSE 'inactive'
         END as status
        FROM user_sessions 
-       WHERE user_id = ?
+       WHERE user_id = ? AND is_active = 1
        ORDER BY last_active DESC`,
       [userId]
     );
     
-    return sessions;
+    // Format sessions with device icons and formatted times
+    return sessions.map(session => {
+      // Device icon
+      const deviceIcon = session.device_type === 'mobile' ? '📱' : 
+                         session.device_type === 'tablet' ? '📱' : '💻';
+      
+      // Mask IP address
+      const maskedIp = session.ip_address ? 
+        session.ip_address.split('.').slice(0, 2).join('.') + '.xxx.xxx' : 
+        'Unknown';
+      
+      // Format last active
+      const lastActive = new Date(session.last_active);
+      const now = new Date();
+      const diffMs = now - lastActive;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      let lastActiveText = 'Baru saja';
+      if (diffMins < 1) lastActiveText = 'Baru saja';
+      else if (diffMins < 60) lastActiveText = `${diffMins} menit lalu`;
+      else if (diffHours < 24) lastActiveText = `${diffHours} jam lalu`;
+      else lastActiveText = `${diffDays} hari lalu`;
+      
+      // Format login time
+      const loginTime = new Date(session.created_at).toLocaleString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      // Check if this is the current session by comparing tokens
+      const isCurrentSession = currentToken && session.session_token === currentToken;
+      
+      return {
+        id: session.id,
+        deviceName: session.device_name || 'Unknown Device',
+        deviceIcon,
+        deviceType: session.device_type,
+        browser: session.browser,
+        os: session.os,
+        ipAddress: maskedIp,
+        lastActive: session.last_active,
+        lastActiveText,
+        loginTime,
+        createdAt: session.created_at,
+        isCurrent: isCurrentSession, // Boolean true/false based on token comparison
+        status: session.status,
+        // Don't expose session_token in response for security
+      };
+    });
   } catch (error) {
     console.error('Error getting user sessions:', error);
     return [];

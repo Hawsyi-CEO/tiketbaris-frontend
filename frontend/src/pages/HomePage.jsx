@@ -5,6 +5,7 @@ import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, R
 import EventDetailModal from '../components/EventDetailModal';
 import InfoModal from '../components/InfoModal';
 import { DOMAIN } from '../config/api';
+import { formatRupiah } from '../utils/formatRupiah';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -171,18 +172,18 @@ export default function HomePage() {
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-pink-50">
         {/* Header/Navigation */}
         <nav className="glass-effect sticky top-0 z-50 border-b border-white border-opacity-20">
-          <div className="container-responsive py-4">
+          <div className="container-responsive py-3 sm:py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3">
                 <h1 className="text-xl sm:text-2xl font-bold gradient-text cursor-pointer" 
                     onClick={() => navigate('/')}>
                   🎫 Tiket Baris
                 </h1>
-                <div className="hidden sm:flex items-center gap-2">
-                  <span className="text-gray-400 text-xs">|</span>
-                  <span className="text-gray-600 text-sm">Powered by</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="hidden sm:block text-gray-400 text-xs">|</span>
+                  <span className="text-gray-600 text-[10px] sm:text-sm">Powered by</span>
                   <a href="https://simpaskor.id" target="_blank" rel="noopener noreferrer">
-                    <img src="/logo-simpaskor.png" alt="SimpaSkor" className="h-5 opacity-70 hover:opacity-100 transition-opacity" />
+                    <img src="/logo-simpaskor.png" alt="SimpaSkor" className="h-4 sm:h-6 opacity-70 hover:opacity-100 transition-opacity" />
                   </a>
                 </div>
               </div>
@@ -419,7 +420,7 @@ export default function HomePage() {
                             <div>
                               <div className="text-xs text-gray-500">Mulai dari</div>
                               <div className="text-xl font-bold text-green-600">
-                                Rp {event.price?.toLocaleString('id-ID') || '0'}
+                                Rp {formatRupiah(event.price || 0)}
                               </div>
                             </div>
                             

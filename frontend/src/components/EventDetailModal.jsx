@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DOMAIN } from '../config/api';
+import { formatRupiah } from '../utils/formatRupiah';
 
 export default function EventDetailModal({ event, onClose, onCheckout }) {
   const [activeTab, setActiveTab] = useState('detail');
@@ -138,7 +139,7 @@ export default function EventDetailModal({ event, onClose, onCheckout }) {
                     <div>
                       <p className="text-xs text-gray-500 font-medium">Harga Tiket</p>
                       <p className="text-xl font-bold text-green-600">
-                        Rp {event.price.toLocaleString('id-ID')}
+                        Rp {formatRupiah(event.price)}
                       </p>
                     </div>
                   </div>

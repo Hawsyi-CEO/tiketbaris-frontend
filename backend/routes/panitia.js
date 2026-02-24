@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const pool = require('../config/database');
 const { authenticateToken, checkRole } = require('../middleware/auth');
+const PricingService = require('../services/pricingService');
 
 const router = express.Router();
 
@@ -538,6 +539,212 @@ router.get('/event-tickets', authenticateToken, checkRole(['panitia']), async (r
     res.json(tickets || []);
   } catch (error) {
     console.error('Error fetching event tickets:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ===== REVENUE ENDPOINTS =====
+
+// Get panitia dashboard revenue summary
+router.get('/revenue', authenticateToken, checkRole(['panitia']), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const conn = await pool.getConnection();
+    
+    // Get all completed transactions for panitia's events
+    const [transactions] = await conn.execute(
+      `SELECT 
+        t.id, t.total_amount, t.status, 
+        t.payment_method, t.midtrans_fee_amount, 
+        t.platform_fee_amount, t.total_fee_amount, 
+        t.net_amount_to_organizer, t.fee_breakdown,
+        e.id as event_id, e.title as event_title
+       FROM transactions t
+       JOIN events e ON t.event_id = e.id
+       WHERE e.user_id = ? AND t.status = 'completed'
+       ORDER BY t.created_at DESC`,
+      [userId]
+    );
+    
+    await conn.release();
+    
+    if (!transactions || transactions.length === 0) {
+      return res.json({
+        total_transactions: 0,
+        total_gross_amount: 0,
+        total_platform_fee: 0,
+        total_midtrans_fee: 0,
+        total_net_amount: 0,
+        by_payment_method: {},
+        recent_transactions: []
+      });
+    }
+    
+    // Calculate aggregates
+    let total_gross = 0;
+    let total_platform_fee = 0;
+    let total_midtrans_fee = 0;
+    let total_net = 0;
+    const byPaymentMethod = {};
+    
+    transactions.forEach(t => {
+      total_gross += t.total_amount || 0;
+      total_platform_fee += t.platform_fee_amount || 0;
+      total_midtrans_fee += t.midtrans_fee_amount || 0;
+      total_net += t.net_amount_to_organizer || 0;
+      
+      // Group by payment method
+      if (t.payment_method) {
+        if (!byPaymentMethod[t.payment_method]) {
+          byPaymentMethod[t.payment_method] = {
+            count: 0,
+            gross: 0,
+            net: 0
+          };
+        }
+        byPaymentMethod[t.payment_method].count += 1;
+        byPaymentMethod[t.payment_method].gross += t.total_amount || 0;
+        byPaymentMethod[t.payment_method].net += t.net_amount_to_organizer || 0;
+      }
+    });
+    
+    res.json({
+      total_transactions: transactions.length,
+      total_gross_amount: total_gross,
+      total_platform_fee: total_platform_fee,
+      total_platform_fee_percentage: 2,
+      total_midtrans_fee: total_midtrans_fee,
+      total_net_amount: total_net,
+      by_payment_method: byPaymentMethod,
+      recent_transactions: transactions.slice(0, 10).map(t => ({
+        id: t.id,
+        event: t.event_title,
+        amount: t.total_amount,
+        platform_fee: t.platform_fee_amount,
+        net_to_organizer: t.net_amount_to_organizer,
+        payment_method: t.payment_method,
+        date: t.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching panitia revenue:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get revenue detail for specific event
+router.get('/event/:eventId/revenue', authenticateToken, checkRole(['panitia']), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const eventId = req.params.eventId;
+    const conn = await pool.getConnection();
+    
+    // Verify user owns this event
+    const [eventCheck] = await conn.execute(
+      'SELECT id FROM events WHERE id = ? AND user_id = ?',
+      [eventId, userId]
+    );
+    
+    if (!eventCheck || eventCheck.length === 0) {
+      await conn.release();
+      return res.status(403).json({ error: 'Unauthorized - you do not own this event' });
+    }
+    
+    // Get event details
+    const [eventData] = await conn.execute(
+      'SELECT id, title, price, stock, current_stock FROM events WHERE id = ?',
+      [eventId]
+    );
+    
+    // Get all completed transactions for this event
+    const [transactions] = await conn.execute(
+      `SELECT 
+        t.id, t.total_amount, t.quantity, t.status,
+        t.payment_method, t.midtrans_fee_amount,
+        t.platform_fee_amount, t.total_fee_amount,
+        t.net_amount_to_organizer, t.fee_breakdown,
+        t.created_at
+       FROM transactions t
+       WHERE t.event_id = ? AND t.status = 'completed'
+       ORDER BY t.created_at DESC`,
+      [eventId]
+    );
+    
+    await conn.release();
+    
+    const event = eventData?.[0];
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    // Calculate aggregates
+    let total_gross = 0;
+    let total_quantity = 0;
+    let total_platform_fee = 0;
+    let total_midtrans_fee = 0;
+    let total_net = 0;
+    const byPaymentMethod = {};
+    
+    (transactions || []).forEach(t => {
+      total_gross += t.total_amount || 0;
+      total_quantity += t.quantity || 0;
+      total_platform_fee += t.platform_fee_amount || 0;
+      total_midtrans_fee += t.midtrans_fee_amount || 0;
+      total_net += t.net_amount_to_organizer || 0;
+      
+      // Group by payment method
+      if (t.payment_method) {
+        if (!byPaymentMethod[t.payment_method]) {
+          byPaymentMethod[t.payment_method] = {
+            count: 0,
+            gross: 0,
+            platform_fee: 0,
+            midtrans_fee: 0,
+            net: 0
+          };
+        }
+        byPaymentMethod[t.payment_method].count += 1;
+        byPaymentMethod[t.payment_method].gross += t.total_amount || 0;
+        byPaymentMethod[t.payment_method].platform_fee += t.platform_fee_amount || 0;
+        byPaymentMethod[t.payment_method].midtrans_fee += t.midtrans_fee_amount || 0;
+        byPaymentMethod[t.payment_method].net += t.net_amount_to_organizer || 0;
+      }
+    });
+    
+    res.json({
+      event: {
+        id: event.id,
+        title: event.title,
+        price: event.price,
+        capacity: event.stock,
+        remaining: event.current_stock
+      },
+      revenue: {
+        total_transactions: transactions?.length || 0,
+        tickets_sold: total_quantity,
+        total_gross_amount: total_gross,
+        total_platform_fee: total_platform_fee,
+        total_platform_fee_percentage: 2,
+        total_midtrans_fee: total_midtrans_fee,
+        total_fee_amount: total_platform_fee + total_midtrans_fee,
+        net_to_organizer: total_net,
+        by_payment_method: byPaymentMethod
+      },
+      transactions: (transactions || []).map(t => ({
+        id: t.id,
+        quantity: t.quantity,
+        gross_amount: t.total_amount,
+        platform_fee: t.platform_fee_amount,
+        midtrans_fee: t.midtrans_fee_amount,
+        net_amount: t.net_amount_to_organizer,
+        payment_method: t.payment_method,
+        date: t.created_at,
+        fee_breakdown: t.fee_breakdown ? JSON.parse(t.fee_breakdown) : null
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching event revenue:', error);
     res.status(500).json({ error: error.message });
   }
 });

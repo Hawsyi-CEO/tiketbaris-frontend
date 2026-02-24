@@ -11,7 +11,11 @@ const {
 // Get all sessions for current user
 router.get('/my-devices', authenticateToken, async (req, res) => {
   try {
-    const sessions = await getUserSessions(req.user.id);
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    const currentToken = authHeader ? authHeader.replace('Bearer ', '') : null;
+    
+    const sessions = await getUserSessions(req.user.id, currentToken);
     
     res.json({
       success: true,

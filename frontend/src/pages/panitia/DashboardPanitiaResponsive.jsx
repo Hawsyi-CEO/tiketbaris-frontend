@@ -31,6 +31,10 @@ const DashboardPanitiaResponsive = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [profileData, setProfileData] = useState({ organizer_name: '', email: '' });
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  
+  // Revenue States
+  const [revenueData, setRevenueData] = useState(null);
+  const [revenueLoading, setRevenueLoading] = useState(false);
 
   // Mobile navigation items
   const mobileNavItems = [
@@ -54,6 +58,7 @@ const DashboardPanitiaResponsive = () => {
     fetchPanitiaData();
     fetchMyEvents();
     fetchTickets();
+    fetchRevenue();
     
     // Cleanup camera on unmount
     return () => {
@@ -107,6 +112,22 @@ const DashboardPanitiaResponsive = () => {
       showNotification('error', 'Gagal memuat data tiket');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRevenue = async () => {
+    try {
+      setRevenueLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/panitia/revenue`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRevenueData(response.data || null);
+    } catch (error) {
+      console.error('Error fetching revenue:', error);
+      // Don't show notification for revenue fetch - it's optional
+    } finally {
+      setRevenueLoading(false);
     }
   };
 
@@ -526,6 +547,90 @@ const DashboardPanitiaResponsive = () => {
         />
       </ResponsiveGrid>
 
+      {/* Revenue Summary Section */}
+      {revenueData && (
+        <ResponsiveCard className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">💰 Ringkasan Pendapatan</h3>
+          <ResponsiveGrid cols={{ xs: 2, sm: 2, lg: 4 }}>
+            {/* Total Terjual */}
+            <div className="bg-white rounded-xl p-4 border border-blue-100 hover-lift">
+              <div className="text-sm text-gray-600 mb-1">Total Terjual</div>
+              <div className="text-2xl font-bold text-blue-600">
+                Rp {(revenueData.total_gross_amount || 0).toLocaleString('id-ID')}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">
+                {revenueData.total_transactions} transaksi
+              </div>
+            </div>
+
+            {/* Komisi Platform (2%) */}
+            <div className="bg-white rounded-xl p-4 border border-red-100 hover-lift">
+              <div className="text-sm text-gray-600 mb-1">Komisi Platform (2%)</div>
+              <div className="text-2xl font-bold text-red-500">
+                -Rp {(revenueData.total_platform_fee || 0).toLocaleString('id-ID')}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">Potongan otomatis</div>
+            </div>
+
+            {/* Biaya Midtrans */}
+            <div className="bg-white rounded-xl p-4 border border-orange-100 hover-lift">
+              <div className="text-sm text-gray-600 mb-1">Biaya Midtrans</div>
+              <div className="text-2xl font-bold text-orange-500">
+                -Rp {(revenueData.total_midtrans_fee || 0).toLocaleString('id-ID')}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">Biaya payment gateway</div>
+            </div>
+
+            {/* Bersih ke Akun */}
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 border-2 border-green-300 hover-lift text-white">
+              <div className="text-sm text-green-100 mb-1">Bersih ke Akun</div>
+              <div className="text-2xl font-bold">
+                Rp {(revenueData.total_net_amount || 0).toLocaleString('id-ID')}
+              </div>
+              <div className="text-xs text-green-200 mt-2">Dana siap cair</div>
+            </div>
+          </ResponsiveGrid>
+
+          {/* Payment Method Breakdown */}
+          {Object.keys(revenueData.by_payment_method || {}).length > 0 && (
+            <div className="mt-6 pt-6 border-t border-purple-200">
+              <h4 className="font-semibold text-gray-900 mb-4">📊 Breakdown per Metode Pembayaran</h4>
+              <ResponsiveGrid cols={{ xs: 1, sm: 2, lg: 3 }}>
+                {Object.entries(revenueData.by_payment_method).map(([method, data]) => (
+                  <div key={method} className="bg-white rounded-lg p-3 border border-gray-100">
+                    <div className="text-sm font-semibold text-gray-700 mb-2">
+                      {method === 'gopay' && '💳 GoPay'}
+                      {method === 'shopeepay' && '🛒 ShopeePay'}
+                      {method === 'dana' && '📱 DANA'}
+                      {method === 'bank' && '🏦 Transfer Bank'}
+                      {method === 'cc' && '💳 Kartu Kredit'}
+                      {method === 'minimarket' && '🏪 Minimarket'}
+                      {method === 'akulaku' && '🎯 Akulaku'}
+                      {method === 'kredivo' && '💰 Kredivo'}
+                      {!['gopay', 'shopeepay', 'dana', 'bank', 'cc', 'minimarket', 'akulaku', 'kredivo'].includes(method) && method.toUpperCase()}
+                    </div>
+                    <div className="space-y-1 text-xs text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Transaksi:</span>
+                        <span className="font-semibold">{data.count}x</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Terjual:</span>
+                        <span className="font-semibold">Rp {(data.gross || 0).toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-gray-200">
+                        <span>Bersih:</span>
+                        <span className="font-semibold text-green-600">Rp {(data.net || 0).toLocaleString('id-ID')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </ResponsiveGrid>
+            </div>
+          )}
+        </ResponsiveCard>
+      )}
+
       {/* Quick Actions */}
       <ResponsiveCard>
         <h3 className="text-xl font-bold text-gray-900 mb-4">🚀 Aksi Cepat</h3>
@@ -557,6 +662,13 @@ const DashboardPanitiaResponsive = () => {
             onClick={() => setActiveTab('reports')}
           >
             📊 Lihat Laporan
+          </InteractiveButton>
+          <InteractiveButton
+            variant="secondary"
+            fullWidth
+            onClick={() => navigate('/panitia/analytics')}
+          >
+            💰 Analytics
           </InteractiveButton>
         </ResponsiveGrid>
       </ResponsiveCard>
@@ -1025,6 +1137,13 @@ const DashboardPanitiaResponsive = () => {
           <InteractiveButton variant="warning" fullWidth>
             🔒 Ubah Password
           </InteractiveButton>
+          <InteractiveButton 
+            variant="info" 
+            fullWidth
+            onClick={() => navigate('/user/active-devices')}
+          >
+            🛡️ Device & Sesi Aktif
+          </InteractiveButton>
           <InteractiveButton
             variant="danger"
             fullWidth
@@ -1057,9 +1176,18 @@ const DashboardPanitiaResponsive = () => {
           {/* Header */}
           <div className="py-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-green-600">Panitia Dashboard</h1>
-                <p className="text-gray-600 mt-1 text-sm md:text-base">Kelola Event & Scan Tiket</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <h1 className="text-2xl md:text-3xl font-bold text-green-600">Panitia Dashboard</h1>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="hidden sm:block text-gray-400 text-xs">|</span>
+                    <span className="text-gray-600 text-[10px] sm:text-sm">Powered by</span>
+                    <a href="https://simpaskor.id" target="_blank" rel="noopener noreferrer">
+                      <img src="/logo-simpaskor.png" alt="SimpaSkor" className="h-4 sm:h-6 opacity-70 hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base">Kelola Event & Scan Tiket</p>
               </div>
               {!isMobile && (
                 <InteractiveButton variant="danger" onClick={handleLogout}>

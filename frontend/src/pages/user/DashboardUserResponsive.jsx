@@ -4,6 +4,7 @@ import axios from 'axios';
 import QRCode from 'qrcode';
 import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, ResponsiveGrid, MobileNavigation, StatsCard, NotificationToast } from '../../components/ResponsiveComponents';
 import InfoModal from '../../components/InfoModal';
+import PendingTransactions from '../../components/PendingTransactions';
 import socketService from '../../services/socket';
 import { API_URL, DOMAIN } from '../../config/api';
 
@@ -581,6 +582,12 @@ const DashboardUserResponsive = () => {
   // Render Dashboard Tab
   const renderDashboard = () => (
     <div className="space-y-6">
+      {/* Pending Transactions Alert */}
+      <PendingTransactions onUpdate={() => {
+        fetchUser();
+        fetchTickets();
+      }} />
+
       {/* Welcome Section */}
       <ResponsiveCard className="text-center bg-gradient-to-r from-red-500 to-orange-600 text-white">
         <div className="space-y-3">
@@ -597,13 +604,20 @@ const DashboardUserResponsive = () => {
           </div>
           
           {/* My Ticket Button */}
-          <div className="pt-2">
+          <div className="pt-2 flex gap-3 justify-center flex-wrap">
             <InteractiveButton
               variant="light"
               onClick={() => setActiveTab('tickets')}
               className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg shadow-lg"
             >
               🎟️ My Ticket
+            </InteractiveButton>
+            <InteractiveButton
+              variant="light"
+              onClick={() => navigate('/user/transactions')}
+              className="bg-white text-orange-600 hover:bg-orange-50 font-semibold px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg shadow-lg"
+            >
+              📋 Riwayat Transaksi
             </InteractiveButton>
           </div>
         </div>
@@ -1181,6 +1195,13 @@ const DashboardUserResponsive = () => {
           <InteractiveButton 
             variant="info" 
             fullWidth
+            onClick={() => navigate('/user/active-devices')}
+          >
+            🛡️ Device & Sesi Aktif
+          </InteractiveButton>
+          <InteractiveButton 
+            variant="info" 
+            fullWidth
             onClick={() => setActiveTab('dashboard')}
           >
             🏠 Kembali ke Dashboard
@@ -1319,9 +1340,18 @@ const DashboardUserResponsive = () => {
           {/* Header */}
           <div className="py-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold gradient-text">Tiket Baris Dashboard</h1>
-                <p className="text-gray-600 mt-1">Platform Tiket Digital Terpercaya</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Tiket Baris Dashboard</h1>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="hidden sm:block text-gray-400 text-xs">|</span>
+                    <span className="text-gray-600 text-[10px] sm:text-sm">Powered by</span>
+                    <a href="https://simpaskor.id" target="_blank" rel="noopener noreferrer">
+                      <img src="/logo-simpaskor.png" alt="SimpaSkor" className="h-4 sm:h-6 opacity-70 hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm sm:text-base">Platform Tiket Digital Terpercaya</p>
               </div>
               {!isMobile && (
                 <div className="flex gap-3">

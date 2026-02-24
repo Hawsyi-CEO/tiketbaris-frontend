@@ -363,6 +363,13 @@ router.post('/google', async (req, res) => {
       const validRoles = ['user', 'panitia'];
       const selectedRole = validRoles.includes(role) ? role : 'user';
 
+      // Log role selection untuk tracking
+      console.log(`[GOOGLE AUTH] New user registering with role: ${selectedRole}`, {
+        email: email,
+        requestedRole: role,
+        finalRole: selectedRole
+      });
+
       // New user - register with selected role
       isNewUser = true;
       const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
@@ -404,6 +411,15 @@ router.post('/google', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+
+    // Track device login
+    try {
+      const deviceInfo = await trackDevice(user.id, req);
+      console.log('[GOOGLE AUTH] Device tracked:', deviceInfo);
+    } catch (deviceError) {
+      console.error('[GOOGLE AUTH] Error tracking device:', deviceError);
+      // Don't fail login if device tracking fails
+    }
 
     res.json({
       message: isNewUser ? 'Registrasi dengan Google berhasil!' : 'Login dengan Google berhasil!',

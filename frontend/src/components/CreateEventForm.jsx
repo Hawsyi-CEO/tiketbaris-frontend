@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatRupiah } from '../utils/formatRupiah';
 
 export default function CreateEventForm({ onNext, onBack, initialData }) {
   const data = initialData || {};
@@ -280,7 +281,7 @@ export default function CreateEventForm({ onNext, onBack, initialData }) {
               />
               {formData.price > 0 && (
                 <p className="text-xs text-indigo-600 mt-1">
-                  Anda terima: Rp {(formData.price * 0.98).toLocaleString('id-ID')} (setelah komisi 2%)
+                  Anda terima: Rp {formatRupiah(formData.price * 0.98)} (setelah komisi 2%)
                 </p>
               )}
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}

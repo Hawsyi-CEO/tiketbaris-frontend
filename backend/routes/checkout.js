@@ -2,6 +2,7 @@ const express = require('express');
 const midtransClient = require('midtrans-client');
 const pool = require('../config/database');
 const { authenticateToken, checkRole } = require('../middleware/auth');
+const PricingService = require('../services/pricingService');
 
 const router = express.Router();
 
@@ -63,9 +64,9 @@ router.post('/process', authenticateToken, checkRole(['user']), async (req, res)
 
     const userEmail = users[0]?.email || 'dummy@example.com';
 
-    // Save transaction to database
+    // Save transaction to database with 24-hour expiration
     const [transResult] = await conn.execute(
-      'INSERT INTO transactions (midtrans_order_id, user_id, event_id, quantity, unit_price, total_amount, final_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO transactions (midtrans_order_id, user_id, event_id, quantity, unit_price, total_amount, final_amount, status, expired_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))',
       [orderId, userId, eventId, quantity, event.price, totalPrice, totalPrice, 'pending']
     );
 
@@ -87,6 +88,15 @@ router.post('/process', authenticateToken, checkRole(['user']), async (req, res)
         first_name: username,
         email: userEmail
       },
+      enabledPayments: [
+        "gopay", 
+        "shopeepay", 
+        "other_qris",  // QRIS akan muncul di semua device
+        "bca_va", 
+        "bni_va", 
+        "bri_va",
+        "permata_va"
+      ],
       callbacks: {
         finish: process.env.CALLBACK_FINISH_URL || 'http://localhost:3000/payment-success'
       }
@@ -95,6 +105,12 @@ router.post('/process', authenticateToken, checkRole(['user']), async (req, res)
     // Create Midtrans transaction
     const midtransTransaction = await snap.createTransaction(transactionParams);
     const token = midtransTransaction.token;
+
+    // Update transaction with snap_token for re-use
+    await conn.execute(
+      'UPDATE transactions SET snap_token = ? WHERE id = ?',
+      [token, transResult.insertId]
+    );
 
     await conn.release();
 

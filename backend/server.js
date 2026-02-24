@@ -14,6 +14,7 @@ const { checkBruteForce } = require('./middleware/enhanced-auth');
 
 // Import and start session cleanup scheduler
 const { startSessionCleanup } = require('./scheduler/session-cleanup');
+const { startTransactionExpiryScheduler } = require('./scheduler/transaction-expiry');
 
 const app = express();
 
@@ -24,6 +25,10 @@ const generalLimiter = rateLimit({
   message: { error: 'Terlalu banyak request, coba lagi dalam 15 menit' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting untuk Google OAuth
+    return req.path === '/api/auth/google' || req.path === '/api/auth/verify';
+  },
   handler: (req, res) => {
     logSecurityEvent('warn', 'RATE_LIMIT_EXCEEDED', {
       ip: req.ip,
@@ -52,6 +57,7 @@ const authLimiter = rateLimit({
 // Security middleware stack
 app.use(helmet({
   crossOriginEmbedderPolicy: false, // Disable untuk Midtrans iframe
+  crossOriginOpenerPolicy: false, // Disable untuk Google OAuth popup
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -75,12 +81,19 @@ const corsOptions = {
   origin: [
     'https://tiketbaris.id',
     'http://tiketbaris.id',
+    'https://jabar.forbasi.or.id',
+    'http://jabar.forbasi.or.id',
+    'https://forbasi.or.id',
+    // Development only - remove in strict production
     'http://localhost:3000',
     'http://localhost:3001',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'http://localhost',
+    'http://127.0.0.1'
   ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-API-Secret', 'X-User-Token', 'X-Partner-Key', 'X-Partner-Secret']
 };
 
 app.use(cors(corsOptions));
@@ -105,6 +118,7 @@ app.use(preventSQLInjection);
 app.use('/api/', generalLimiter);
 app.use('/api/auth/login', authLimiter, checkBruteForce);
 app.use('/api/auth/register', authLimiter);
+// Google OAuth tidak pakai authLimiter karena bisa retry dari Google side
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -120,6 +134,8 @@ const midtransPaymentRoutes = require('./routes/midtrans-payment');
 const securityRoutes = require('./routes/security');
 const sessionsRoutes = require('./routes/sessions');
 const imageCleanupRoutes = require('./routes/image-cleanup');
+const pricingRoutes = require('./routes/pricing');
+const partnerRoutes = require('./routes/partner');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -136,6 +152,8 @@ app.use('/api/qr-tickets', qrTicketRoutes);
 app.use('/api/midtrans', midtransPaymentRoutes);
 app.use('/api/security', securityRoutes);
 app.use('/api/sessions', sessionsRoutes);
+app.use('/api/pricing', pricingRoutes);
+app.use('/api/partner', partnerRoutes);
 
 // Debug middleware untuk log semua requests (commented out untuk testing)
 // app.use((req, res, next) => {
@@ -175,6 +193,9 @@ server.listen(PORT, () => {
   
   // Start session cleanup scheduler
   const sessionCleanup = startSessionCleanup();
+  
+  // Start transaction expiry scheduler (auto-cancel expired pending transactions)
+  startTransactionExpiryScheduler();
   
   // Store cleanup function globally for API access
   global.runManualSessionCleanup = sessionCleanup.runManualCleanup;

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import socketService from './services/socket';
 import PaymentNotification from './components/PaymentNotification';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 
 console.log('App.jsx loading...')
 
@@ -19,9 +20,14 @@ import RegisterPageNew from './pages/RegisterPageNew';
 // Responsive Dashboard Pages
 import DashboardUserResponsive from './pages/user/DashboardUserResponsive';
 import DashboardPanitiaResponsive from './pages/panitia/DashboardPanitiaResponsive';
+import RevenueAnalytics from './pages/panitia/RevenueAnalytics';
 import DashboardAdminResponsive from './pages/admin/DashboardAdminResponsive';
 import AdminLogin from './pages/admin/AdminLogin';
 import TicketScanner from './pages/admin/TicketScanner';
+import AdminTransactions from './pages/admin/AdminTransactions';
+import TransactionHistory from './pages/user/TransactionHistory';
+import TransactionTickets from './pages/user/TransactionTickets';
+import ActiveDevices from './pages/user/ActiveDevices';
 
 // Original Pages (fallback)
 import CreateEventWizard from './pages/panitia/CreateEventWizard';
@@ -34,6 +40,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import CheckoutPageResponsive from './pages/CheckoutPageResponsive';
 import HistoryPembayaran from './pages/user/HistoryPembayaran';
 import MyTickets from './pages/MyTickets';
+import TicketDetail from './pages/TicketDetail';
 import DiagnosticsPage from './pages/DiagnosticsPage';
 
 console.log('All imports loaded successfully')
@@ -144,6 +151,38 @@ function App() {
             } 
           />
           <Route 
+            path="/user/transactions" 
+            element={
+              <ProtectedRoute>
+                <TransactionHistory />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/transaction-history" 
+            element={
+              <ProtectedRoute>
+                <TransactionHistory />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/user/active-devices" 
+            element={
+              <ProtectedRoute>
+                <ActiveDevices />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/transaksi/:transactionId/tiket" 
+            element={
+              <ProtectedRoute>
+                <TransactionTickets />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/user/checkout/:eventId" 
             element={
               <ProtectedRoute>
@@ -170,8 +209,14 @@ function App() {
                 <MyTickets />
               </ProtectedRoute>
             } 
+          />          <Route 
+            path="/tiket/:ticketId" 
+            element={
+              <ProtectedRoute>
+                <TicketDetail />
+              </ProtectedRoute>
+            } 
           />
-
           {/* Panitia Routes - Responsive */}
           <Route 
             path="/panitia/dashboard" 
@@ -205,6 +250,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/panitia/analytics" 
+            element={
+              <ProtectedRoute requiredRole="panitia">
+                <RevenueAnalytics />
+              </ProtectedRoute>
+            } 
+          />
 
           
           {/* Admin Routes - Responsive */}
@@ -234,6 +287,14 @@ function App() {
             } 
           />
           <Route 
+            path="/admin/transactions" 
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminTransactions />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/panitia/scanner" 
             element={
               <ProtectedRoute requiredRole="panitia">
@@ -242,6 +303,9 @@ function App() {
             } 
           />
         </Routes>
+
+        {/* Floating WhatsApp Button - Muncul di semua halaman */}
+        <FloatingWhatsApp />
       </Router>
       </GoogleOAuthProvider>
     );

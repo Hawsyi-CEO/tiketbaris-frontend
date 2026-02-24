@@ -161,12 +161,37 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleError = () => {
+  const handleGoogleError = (error) => {
+    console.error('Google OAuth Error:', error);
+    
+    let errorMessage = 'Tidak dapat terhubung ke Google. Silakan coba lagi.';
+    let errorDetails = '';
+    
+    // Handle specific error codes
+    if (error?.error === 'popup_closed_by_user') {
+      errorMessage = 'Login dibatalkan';
+      errorDetails = 'Anda menutup jendela login Google';
+    } else if (error?.error === 'access_denied') {
+      errorMessage = 'Akses ditolak';
+      errorDetails = 'Anda menolak memberikan izin akses';
+    } else if (error?.error === 'idpiframe_initialization_failed') {
+      errorMessage = 'Browser memblokir Google Login';
+      errorDetails = 'Cookies third-party diblokir. Silakan:' +
+                     '\n1. Gunakan browser Chrome/Safari' +
+                     '\n2. Aktifkan cookies di pengaturan browser' +
+                     '\n3. Coba mode Incognito jika masih gagal' +
+                     '\n\nATAU gunakan login dengan Email & Password';
+    } else {
+      errorMessage = 'Login Google tidak tersedia';
+      errorDetails = 'Silakan gunakan login dengan Email & Password di atas';
+    }
+    
     setNotification({
       isOpen: true,
-      type: 'error',
+      type: 'warning',
       title: 'Login Google Gagal',
-      message: 'Tidak dapat terhubung ke Google. Silakan coba lagi.'
+      message: errorMessage,
+      details: errorDetails
     });
   };
 
@@ -364,6 +389,15 @@ export default function LoginPage() {
                 logo_alignment="left"
                 width="100%"
               />
+              <p style={{ 
+                fontSize: '0.75rem', 
+                color: '#6b7280', 
+                textAlign: 'center', 
+                marginTop: '0.5rem',
+                lineHeight: '1.4'
+              }}>
+                💡 <i>Jika login Google tidak muncul/error, gunakan login Email & Password di atas</i>
+              </p>
             </div>
 
             {/* Footer */}

@@ -62,6 +62,9 @@ export default function RoleSelectionModal({ isOpen, onSelectRole, onClose, load
                 <li>✓ Kelola penjualan</li>
                 <li>✓ Dashboard analytics</li>
               </ul>
+              <p className="text-orange-600 text-sm mt-2 font-semibold">
+                ⚠️ Pilih ini HANYA jika Anda ingin membuat event
+              </p>
             </div>
             <div className="role-option-radio">
               <input 

@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { logAuthEvent, logSuspiciousActivity } = require('./logger');
+const { updateSessionActivity } = require('./device-tracker');
+const db = require('../config/database');
 // TEMPORARILY DISABLED: Email notifications causing errors
 // const { notifyBruteForceAttack } = require('./email-notifications');
 
@@ -19,7 +21,7 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Token tidak ditemukan' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
     if (err) {
       // Log different types of token errors
       let eventType = 'INVALID_TOKEN';
@@ -48,6 +50,32 @@ const authenticateToken = (req, res, next) => {
       return res.status(403).json({ error: 'Token tidak lengkap' });
     }
     
+    // Check if session is still active in database
+    try {
+      const [sessions] = await db.query(
+        'SELECT is_active FROM user_sessions WHERE session_token = ? AND user_id = ?',
+        [token, user.id]
+      );
+      
+      // Only reject if session exists but is inactive
+      if (sessions.length > 0 && !sessions[0].is_active) {
+        logAuthEvent('INACTIVE_SESSION', {
+          ip: req.ip,
+          userAgent: req.get('User-Agent'),
+          userId: user.id,
+          path: req.path
+        });
+        return res.status(401).json({ 
+          error: 'Session telah diakhiri', 
+          logout: true // Signal frontend to clear localStorage
+        });
+      }
+      // If session not found in DB, it might be old token - continue but don't update activity
+    } catch (dbError) {
+      console.error('Error checking session status:', dbError);
+      // Continue if DB check fails to avoid breaking legitimate requests
+    }
+    
     // Check token age (additional security for sensitive operations)
     const tokenAge = Date.now() - (user.iat * 1000);
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
@@ -63,6 +91,13 @@ const authenticateToken = (req, res, next) => {
     }
     
     req.user = user;
+    
+    // Update session last_active time in background (don't block request)
+    updateSessionActivity(token).catch(err => {
+      console.error('Failed to update session activity:', err);
+      // Don't fail the request if session update fails
+    });
+    
     next();
   });
 };

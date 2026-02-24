@@ -4,6 +4,7 @@ import { eventService, checkoutService } from '../services/apiServices';
 import NotificationModal from '../components/NotificationModal';
 import Toast from '../components/Toast';
 import MidtransPayment from '../components/MidtransPayment';
+import { formatRupiah } from '../utils/formatRupiah';
 
 export default function CheckoutPage() {
   const { eventId } = useParams();
@@ -52,8 +53,8 @@ export default function CheckoutPage() {
       details: {
         'Event': event.title,
         'Jumlah Tiket': `${quantity} tiket`,
-        'Harga Satuan': `Rp ${event.price.toLocaleString('id-ID')}`,
-        'Total Pembayaran': `Rp ${totalPrice.toLocaleString('id-ID')}`
+        'Harga Satuan': `Rp ${formatRupiah(event.price)}`,
+        'Total Pembayaran': `Rp ${formatRupiah(totalPrice)}`
       },
       onConfirm: processCheckout
     });
@@ -98,7 +99,7 @@ export default function CheckoutPage() {
         details: {
           'ID Transaksi': data.orderId || data.transactionId,
           'Jumlah Tiket': `${quantity} tiket`,
-          'Total Bayar': `Rp ${totalPrice.toLocaleString('id-ID')}`,
+          'Total Bayar': `Rp ${formatRupiah(totalPrice)}`,
           'Status': 'Sukses ✅'
         },
         onConfirm: () => {
@@ -225,7 +226,7 @@ export default function CheckoutPage() {
               <div style={styles.orderSection}>
                 <div style={styles.orderItem}>
                   <span style={styles.orderLabel}>Harga Tiket</span>
-                  <span style={styles.orderValue}>Rp {event.price.toLocaleString('id-ID')}</span>
+                  <span style={styles.orderValue}>Rp {formatRupiah(event.price)}</span>
                 </div>
 
                 <div style={styles.quantitySection}>
@@ -278,7 +279,7 @@ export default function CheckoutPage() {
                 <div style={styles.summaryRow}>
                   <span style={styles.summaryLabel}>Subtotal</span>
                   <span style={styles.summaryValue}>
-                    Rp {(event.price * quantity).toLocaleString('id-ID')}
+                    Rp {formatRupiah(event.price * quantity)}
                   </span>
                 </div>
 
@@ -292,7 +293,7 @@ export default function CheckoutPage() {
                 <div style={styles.totalRow}>
                   <span style={styles.totalLabel}>Total Pembayaran</span>
                   <span style={styles.totalValue}>
-                    Rp {totalPrice.toLocaleString('id-ID')}
+                    Rp {formatRupiah(totalPrice)}
                   </span>
                 </div>
               </div>
@@ -311,7 +312,7 @@ export default function CheckoutPage() {
                     details: {
                       'Order ID': paymentData.order_id,
                       'Jumlah Tiket': `${quantity} tiket`,
-                      'Total Bayar': `Rp ${paymentData.gross_amount?.toLocaleString('id-ID')}`,
+                      'Total Bayar': `Rp ${formatRupiah(paymentData.gross_amount)}`,
                       'Status': 'Sukses ✅'
                     },
                     onConfirm: () => {

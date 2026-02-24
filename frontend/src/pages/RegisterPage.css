@@ -442,6 +442,175 @@
   text-decoration: underline;
 }
 
+/* Form Input Classes (untuk LoginPage & RegisterPage) */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.form-label-icon {
+  font-size: 1.125rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white;
+  color: #1f2937;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.form-input:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+  opacity: 0.7;
+  color: #6b7280;
+}
+
+.form-password-wrapper {
+  position: relative;
+}
+
+.form-password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.form-password-toggle:hover {
+  opacity: 1;
+}
+
+.register-button {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.register-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+  background: linear-gradient(135deg, #5568d3 0%, #6941a1 100%);
+}
+
+.register-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.register-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register-button-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.register-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.register-error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.register-error-text {
+  font-size: 0.875rem;
+  color: #991b1b;
+  font-weight: 500;
+}
+
+.register-google {
+  width: 100%;
+}
+
+.register-divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.register-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.register-divider span {
+  position: relative;
+  display: inline-block;
+  padding: 0 1rem;
+  background: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .register-container {
@@ -502,14 +671,14 @@
   }
 }
 
-/* Dark mode support */
+/* Dark mode support - FORCE white inputs with dark text */
 @media (prefers-color-scheme: dark) {
   .register-form-container {
     background: #1f2937;
   }
 
   .register-form-wrapper {
-    background: #111827;
+    background: #1f2937;
     color: white;
   }
 
@@ -518,32 +687,56 @@
   }
 
   .register-description,
-  .register-label,
   .register-input-hint,
   .register-terms,
   .register-footer-text {
-    color: #9ca3af;
+    color: #d1d5db;
+  }
+
+  .form-label,
+  .register-label {
+    color: #e5e7eb !important;
   }
 
   .register-input,
-  .register-select {
-    background: #1f2937;
-    border-color: #374151;
-    color: white;
+  .register-select,
+  .form-input {
+    background: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #1f2937 !important;
+    font-weight: 500;
   }
 
   .register-input:focus,
-  .register-select:focus {
-    border-color: #667eea;
-    background: #1f2937;
+  .register-select:focus,
+  .form-input:focus {
+    border-color: #667eea !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  .register-input::placeholder,
+  .form-input::placeholder {
+    color: #9ca3af !important;
+    font-weight: 400;
   }
 
   .register-home-button {
     background: #374151;
-    color: #9ca3af;
+    color: #e5e7eb;
   }
 
   .register-home-button:hover {
     background: #4b5563;
+  }
+  
+  .register-divider span {
+    background: #1f2937;
+    color: #d1d5db;
+  }
+  
+  .register-footer {
+    border-top-color: #374151;
   }
 }

@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ResponsiveLayout, ResponsiveCard, InteractiveButton, ResponsiveInput, ResponsiveGrid, NotificationToast } from '../components/ResponsiveComponents';
 import axios from 'axios';
 import { API_URL, DOMAIN } from '../config/api';
+import { formatRupiah } from '../utils/formatRupiah';
+import { monitorQRISPayment } from '../utils/qrCodeDownloader';
 import './CheckoutPage.css';
 
 const CheckoutPageResponsive = () => {
@@ -154,10 +156,14 @@ const CheckoutPageResponsive = () => {
 
       console.log('Payment created:', { order_id, total_amount });
 
+      // Start monitoring untuk QRIS payment dan inject download button
+      const stopMonitoring = monitorQRISPayment();
+
       // Open Midtrans Snap popup
       window.snap.pay(snap_token, {
         onSuccess: async (result) => {
           console.log('🎉 Payment success (PRODUCTION):', result);
+          stopMonitoring(); // Stop monitoring saat payment berhasil
           showNotification('success', '✅ Pembayaran berhasil! Memproses tiket...');
           
           // PRODUCTION MODE: Webhook akan otomatis create tickets
@@ -181,6 +187,7 @@ const CheckoutPageResponsive = () => {
         onError: (result) => {
           console.error('Payment error:', result);
           showNotification('error', '❌ Pembayaran gagal. Silakan coba lagi.');
+          stopMonitoring(); // Stop monitoring saat popup ditutup
           setLoading(false);
         },
         onClose: () => {
@@ -320,7 +327,7 @@ const CheckoutPageResponsive = () => {
                           <div>
                             <p className="text-xs text-gray-500 font-medium">Harga/Tiket</p>
                             <p className="text-lg font-bold text-green-600">
-                              Rp {event.price?.toLocaleString('id-ID') || '0'}
+                              Rp {formatRupiah(event.price || 0)}
                             </p>
                           </div>
                         </div>
@@ -416,7 +423,7 @@ const CheckoutPageResponsive = () => {
                     <div className="flex justify-between items-center py-3 border-b">
                       <span className="text-gray-600">Harga Tiket</span>
                       <span className="font-semibold">
-                        Rp {event.price.toLocaleString('id-ID')}
+                        Rp {formatRupiah(event.price)}
                       </span>
                     </div>
 
@@ -428,7 +435,7 @@ const CheckoutPageResponsive = () => {
                     <div className="flex justify-between items-center py-3 border-b">
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-semibold">
-                        Rp {(event.price * checkoutData.quantity).toLocaleString('id-ID')}
+                        Rp {formatRupiah(event.price * checkoutData.quantity)}
                       </span>
                     </div>
                     
@@ -436,7 +443,7 @@ const CheckoutPageResponsive = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-bold text-gray-900">Total Pembayaran</span>
                         <span className="text-2xl font-bold text-green-600">
-                          Rp {calculateTotal().toLocaleString('id-ID')}
+                          Rp {formatRupiah(calculateTotal())}
                         </span>
                       </div>
                     </div>

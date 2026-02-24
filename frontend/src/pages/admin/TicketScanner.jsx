@@ -157,17 +157,22 @@ const TicketScanner = () => {
       });
 
       if (code) {
-        console.log('QR Code detected:', code.data);
+        console.log('✅ QR Code detected:', code.data);
+        setScanning(false);
+        
         try {
+          // Parse QR data (should be JSON from backend)
           const ticketData = JSON.parse(code.data);
-          if (ticketData.ticket_code) {
-            handleScanTicket(ticketData.ticket_code);
-            stopCamera();
-            return;
-          }
-        } catch (error) {
-          // Try to use the raw data as ticket code
-          console.log('Using raw QR data as ticket code');
+          console.log('📦 Parsed ticket data:', ticketData);
+          
+          // Send the full QR data to backend for validation
+          handleScanTicket(code.data);
+          stopCamera();
+          return;
+          
+        } catch (parseError) {
+          console.warn('⚠️ QR is not JSON, trying as raw ticket code');
+          // If not JSON, treat as raw ticket code
           handleScanTicket(code.data);
           stopCamera();
           return;
@@ -181,21 +186,24 @@ const TicketScanner = () => {
     }
   };
 
-  const handleScanTicket = async (ticketCode) => {
+  const handleScanTicket = async (qrDataString) => {
     try {
       const token = localStorage.getItem('token');
+      console.log('🎫 Scanning ticket with data:', qrDataString);
+      
       const response = await axios.post(
-        `${API_URL}/tickets/scan`,
-        { ticket_code: ticketCode },
+        `${API_URL}/qr-tickets/scan`,
+        { qrData: qrDataString },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log('✅ Scan success:', response.data);
       setScannedTicket(response.data);
       setScanHistory(prev => [response.data, ...prev]);
       showNotification('success', '✅ Tiket berhasil di-scan!');
       playSuccessSound();
     } catch (error) {
-      console.error('Scan error:', error);
+      console.error('❌ Scan error:', error);
       const errorMsg = error.response?.data?.error || 'Gagal scan tiket';
       showNotification('error', errorMsg);
       playErrorSound();
@@ -207,7 +215,17 @@ const TicketScanner = () => {
       showNotification('error', 'Masukkan kode tiket!');
       return;
     }
-    handleScanTicket(manualCode.trim());
+    
+    console.log('📝 Manual scan with code:', manualCode);
+    
+    // Try to create proper QR data format for manual input
+    // Assume manual input is just the ticket code
+    const manualQRData = JSON.stringify({
+      ticketCode: manualCode.trim(),
+      manual: true
+    });
+    
+    handleScanTicket(manualQRData);
     setManualCode('');
   };
 

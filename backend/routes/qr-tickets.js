@@ -2,6 +2,7 @@ const express = require('express');
 const QRCode = require('qrcode');
 const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const { emitToUser } = require('../socket-server');
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.get('/my-tickets', authenticateToken, async (req, res) => {
         t.ticket_code,
         t.status as ticket_status,
         t.created_at as purchased_at,
+        t.transaction_id,
         e.id as event_id,
         e.title as event_title,
         e.description as event_description,
@@ -44,8 +46,8 @@ router.get('/my-tickets', authenticateToken, async (req, res) => {
           ticketId: ticket.ticket_id,
           ticketCode: ticket.ticket_code,
           eventId: ticket.event_id,
-          userId: userId,
-          timestamp: new Date().toISOString()
+          userId: userId
+          // REMOVED timestamp - agar QR code konsisten
         };
         
         const qrCodeUrl = await QRCode.toDataURL(JSON.stringify(qrData));
@@ -141,6 +143,20 @@ router.post('/scan', authenticateToken, async (req, res) => {
       
       await conn.commit();
       await conn.release();
+      
+      // Emit real-time notification to ticket holder
+      try {
+        emitToUser(ticket.user_id, 'ticketScanned', {
+          ticket_id: ticket.id,
+          ticket_code: ticket.ticket_code,
+          status: 'scanned',
+          scanned_at: new Date().toISOString(),
+          scanner: req.user.username,
+          event_title: ticket.title
+        });
+      } catch (socketError) {
+        console.error('[SCAN] Socket emit error (non-critical):', socketError.message);
+      }
       
       res.json({
         success: true,

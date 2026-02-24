@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { IS_PRODUCTION, API_URL } from '../config/api';
+import { formatRupiah } from '../utils/formatRupiah';
 
 const MidtransPayment = ({ eventId, eventTitle, price, initialQuantity = 1, onPaymentSuccess, onPaymentError }) => {
   const [quantity, setQuantity] = useState(initialQuantity);
@@ -138,7 +139,7 @@ const MidtransPayment = ({ eventId, eventTitle, price, initialQuantity = 1, onPa
       
       <div className="event-info mb-4 p-4 bg-gray-50 rounded">
         <h4 className="font-semibold">{eventTitle}</h4>
-        <p className="text-gray-600">Harga per tiket: Rp {price?.toLocaleString('id-ID')}</p>
+        <p className="text-gray-600">Harga per tiket: Rp {formatRupiah(price)}</p>
       </div>
 
       <div className="quantity-selector mb-4">
@@ -166,11 +167,11 @@ const MidtransPayment = ({ eventId, eventTitle, price, initialQuantity = 1, onPa
         <div className="flex justify-between items-center">
           <span className="font-medium">Total Pembayaran:</span>
           <span className="text-xl font-bold text-blue-600">
-            Rp {totalAmount?.toLocaleString('id-ID')}
+            Rp {formatRupiah(totalAmount)}
           </span>
         </div>
         <p className="text-sm text-gray-600 mt-1">
-          {quantity} tiket × Rp {price?.toLocaleString('id-ID')}
+          {quantity} tiket × Rp {formatRupiah(price)}
         </p>
       </div>
 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api';
 
 const MyTickets = () => {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTicket, setSelectedTicket] = useState(null);
 
   useEffect(() => {
     fetchMyTickets();
@@ -177,10 +178,10 @@ const MyTickets = () => {
 
                   <div className="flex gap-2 flex-wrap">
                     <button
-                      onClick={() => setSelectedTicket(ticket)}
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                      onClick={() => navigate(`/tiket/${ticket.id}`)}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-semibold"
                     >
-                      Lihat Detail
+                      📱 Lihat Detail
                     </button>
                     
                     {ticket.qr_code && (
@@ -210,89 +211,6 @@ const MyTickets = () => {
                 )}
               </div>
             ))}
-          </div>
-        )}
-
-        {/* Ticket Detail Modal */}
-        {selectedTicket && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold">Detail Tiket</h3>
-                  <button
-                    onClick={() => setSelectedTicket(null)}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div className="text-center mb-6">
-                  {selectedTicket.qr_code && (
-                    <img 
-                      src={selectedTicket.qr_code}
-                      alt="QR Code Tiket"
-                      className="w-48 h-48 mx-auto border rounded mb-4"
-                    />
-                  )}
-                  <div className="bg-gray-100 p-3 rounded text-center">
-                    <p className="text-sm text-gray-600">Kode Tiket</p>
-                    <p className="font-mono text-lg font-bold">{selectedTicket.ticket_code}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600">Event</p>
-                    <p className="font-semibold">{selectedTicket.event_title}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Tanggal</p>
-                    <p className="font-semibold">{formatDate(selectedTicket.event_date)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Waktu</p>
-                    <p className="font-semibold">
-                      {formatTime(selectedTicket.event_start_time)} - {formatTime(selectedTicket.event_end_time)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Lokasi</p>
-                    <p className="font-semibold">{selectedTicket.event_location}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Status</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedTicket.status)}`}>
-                      {getStatusText(selectedTicket.status)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Dibeli pada</p>
-                    <p className="font-semibold">
-                      {new Date(selectedTicket.created_at).toLocaleString('id-ID')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-6">
-                  {selectedTicket.qr_code && (
-                    <button
-                      onClick={() => downloadQRCode(selectedTicket)}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                    >
-                      Download QR
-                    </button>
-                  )}
-                  <button
-                    onClick={() => copyTicketCode(selectedTicket.ticket_code)}
-                    className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                  >
-                    Copy Kode
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>

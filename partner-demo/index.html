@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forbasi Jabar - Demo Partner Integration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-encode@1.0.1/dist/jwt-encode.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1e40af',
+            secondary: '#3b82f6',
+            accent: '#f59e0b'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-volleyball text-2xl text-accent"></i>
+          <span class="font-bold text-xl">Forbasi Jabar</span>
+          <span class="text-xs bg-white/20 px-2 py-1 rounded">Demo Partner</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div id="userInfo" class="hidden items-center space-x-3">
+            <span id="userName" class="text-sm"></span>
+            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <i class="fas fa-user text-sm"></i>
+            </div>
+          </div>
+          <button id="loginBtn" onclick="showLoginModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm transition">
+            <i class="fas fa-sign-in-alt mr-2"></i>Login
+          </button>
+          <button id="logoutBtn" onclick="logout()" class="hidden bg-red-500/80 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tab Navigation -->
+  <div class="bg-white border-b">
+    <div class="container mx-auto px-4">
+      <div class="flex space-x-1">
+        <button onclick="showTab('events')" id="tab-events" class="tab-btn px-6 py-4 text-sm font-medium text-primary border-b-2 border-primary">
+          <i class="fas fa-calendar-alt mr-2"></i>Events
+        </button>
+        <button onclick="showTab('mytickets')" id="tab-mytickets" class="tab-btn px-6 py-4 text-sm font-medium text-gray-500 hover:text-primary border-b-2 border-transparent">
+          <i class="fas fa-ticket-alt mr-2"></i>Tiket Saya
+        </button>
+        <button onclick="showTab('admin')" id="tab-admin" class="tab-btn hidden px-6 py-4 text-sm font-medium text-gray-500 hover:text-primary border-b-2 border-transparent">
+          <i class="fas fa-cog mr-2"></i>Admin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- Events Tab -->
+    <div id="content-events" class="tab-content">
+      <!-- API Status -->
+      <div id="apiStatus" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="loader"></div>
+          <span class="text-blue-700">Menghubungkan ke Tiket Baris API...</span>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <input type="text" id="searchInput" onkeyup="debounceSearch()" placeholder="Cari event..." 
+                class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+            </div>
+          </div>
+          <button onclick="loadEvents()" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition flex items-center justify-center">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Events Grid -->
+      <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Events will be loaded here -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyEvents" class="hidden text-center py-16">
+        <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">Tidak ada event</h3>
+        <p class="text-gray-400">Belum ada event yang tersedia saat ini</p>
+      </div>
+    </div>
+
+    <!-- My Tickets Tab -->
+    <div id="content-mytickets" class="tab-content hidden">
+      <div id="ticketsRequireLogin" class="text-center py-16">
+        <i class="fas fa-lock text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">Login diperlukan</h3>
+        <p class="text-gray-400 mb-4">Silakan login untuk melihat tiket Anda</p>
+        <button onclick="showLoginModal()" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition">
+          <i class="fas fa-sign-in-alt mr-2"></i>Login Sekarang
+        </button>
+      </div>
+      <div id="ticketsList" class="hidden">
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-2">Tiket Saya</h2>
+          <p class="text-gray-500">Daftar tiket yang sudah dibeli</p>
+        </div>
+        <div id="ticketsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Tickets will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Tab -->
+    <div id="content-admin" class="tab-content hidden">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Total Events</p>
+              <p id="stat-events" class="text-3xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Total Transaksi</p>
+              <p id="stat-transactions" class="text-3xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-receipt text-green-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Total Users</p>
+              <p id="stat-users" class="text-3xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-users text-purple-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Total Revenue</p>
+              <p id="stat-revenue" class="text-2xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-money-bill-wave text-amber-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Transaksi Terbaru</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="text-left text-gray-500 text-sm border-b">
+                <th class="pb-3">Order ID</th>
+                <th class="pb-3">Event</th>
+                <th class="pb-3">Pembeli</th>
+                <th class="pb-3">Amount</th>
+                <th class="pb-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="recentTransactions">
+              <!-- Transactions will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 fade-in">
+      <div class="p-6 border-b">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-800">Login Demo</h3>
+          <button onclick="hideLoginModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <p class="text-gray-500 text-sm mt-1">Pilih role untuk testing Partner API</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <input type="email" id="loginEmail" value="demo@jabar.test" 
+            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Nama</label>
+          <input type="text" id="loginName" value="Demo User Jabar" 
+            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+          <div class="grid grid-cols-3 gap-3">
+            <button onclick="selectRole('user')" id="role-user" class="role-btn p-4 border-2 border-primary bg-primary/5 rounded-lg text-center transition">
+              <i class="fas fa-user text-2xl text-primary mb-2"></i>
+              <p class="text-sm font-medium">User</p>
+            </button>
+            <button onclick="selectRole('panitia')" id="role-panitia" class="role-btn p-4 border-2 border-gray-200 rounded-lg text-center hover:border-primary/50 transition">
+              <i class="fas fa-user-tie text-2xl text-gray-400 mb-2"></i>
+              <p class="text-sm font-medium text-gray-600">Panitia</p>
+            </button>
+            <button onclick="selectRole('admin')" id="role-admin" class="role-btn p-4 border-2 border-gray-200 rounded-lg text-center hover:border-primary/50 transition">
+              <i class="fas fa-user-shield text-2xl text-gray-400 mb-2"></i>
+              <p class="text-sm font-medium text-gray-600">Admin</p>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 bg-gray-50 rounded-b-2xl">
+        <button onclick="doLogin()" class="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium">
+          <i class="fas fa-sign-in-alt mr-2"></i>Login
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Detail Modal -->
+  <div id="eventModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 fade-in">
+      <div id="eventModalContent">
+        <!-- Event details will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg hidden fade-in">
+    <div class="flex items-center space-x-3">
+      <i id="toastIcon" class="fas fa-check-circle"></i>
+      <span id="toastMessage"></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
